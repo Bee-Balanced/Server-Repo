@@ -1,7 +1,10 @@
 import express from "express";
+import session from "express-session";
+import dotenv from "dotenv";
 import { handleLogin } from "./login.js";
 import { handleSignup } from "./signup.js";
-import session from "express-session";
+import db from "./db.js";
+
 
 const app = express()
 const PORT = 8000;
