@@ -142,9 +142,10 @@ app.get("/home", async (req, res) => {
 
     // Render the home page with the filtered survey data
     res.render("home", {
-      overallData,
-      mentalData,
-      physicalData,
+      overallData: overallData.map(d => d.avgScore),
+      mentalData: mentalData.map(d => d.avgScore),
+      physicalData: physicalData.map(d => d.avgScore),
+      days: overallData.map(d => d.date),
       overallFeedback: getLowestFeedback(general),
       mentalFeedback: getLowestFeedback(mental),
       physicalFeedback: getLowestFeedback(physical),
