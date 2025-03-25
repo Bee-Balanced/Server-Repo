@@ -1,0 +1,54 @@
+<script type="module">
+   import Plotly from 'plotly.js-dist';
+ 
+   document.addEventListener("DOMContentLoaded", function () {
+     const overallData = <%- JSON.stringify(overallData) %> || [0, 0, 0, 0, 0, 0, 0];
+     const mentalData = <%- JSON.stringify(mentalData) %> || [0, 0, 0, 0, 0, 0, 0];
+     const physicalData = <%- JSON.stringify(physicalData) %> || [0, 0, 0, 0, 0, 0, 0];
+     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+ 
+     function drawChart(chartId, title, data) {
+       const trace = {
+         x: days,
+         y: data,
+         type: 'scatter',
+         mode: 'lines+markers',
+         marker: { color: '#ffd700' },
+         line: { color: '#ffd700' }
+       };
+ 
+       const layout = {
+         title: title,
+         titlefont: { color: '#ffd700' },
+         xaxis: { title: "Days", tickfont: { color: '#ffd700' }, linecolor: '#ffd700' },
+         yaxis: { title: "Score", range: [0, 10], tickfont: { color: '#ffd700' }, linecolor: '#ffd700' },
+         plot_bgcolor: '#222',
+         paper_bgcolor: '#222',
+       };
+ 
+       const lastIndex = data.findIndex(val => val !== null && val !== 0);
+       if (lastIndex !== -1) {
+         const lastX = days[lastIndex];
+         const lastY = data[lastIndex];
+         layout.images = [{
+           source: "/images/bee.gif",
+           x: lastX,
+           y: lastY,
+           xref: "x",
+           yref: "y",
+           sizex: 3,
+           sizey: 3,
+           xanchor: "center",
+           yanchor: "middle",
+           layer: "above"
+         }];
+       }
+ 
+       Plotly.newPlot(chartId, [trace], layout);
+     }
+ 
+     drawChart("overallChart", "Overall Health Progress", overallData);
+     drawChart("mentalChart", "Mental Health Progress", mentalData);
+     drawChart("physicalChart", "Physical Health Progress", physicalData);
+   });
+ </script>

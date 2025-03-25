@@ -5,16 +5,158 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Home</title>
   <link rel="stylesheet" href="/styles/home.css">
+  <script src="https://cdn.plot.ly/plotly-3.0.1.min.js"></script>
 </head>
 <body>
+  <%- include('partials/navbar') %>
   <div class="home-container">
     <h1>Welcome to Bee Balanced</h1>
     <p>Your daily well-being tracker.</p>
 
     <div class="home-buttons">
-      <a href="/survey" class="btn">Take Today's Survey</a>
-      <a href="/logout" class="btn">Logout</a>
-    </div>
-  </div>
-</body>
-</html>
+       <a href="/survey" class="btn">Take Today's Survey</a>
+       <a href="/logout" class="btn">Logout</a>
+     </div>
+ 
+     <!-- Charts Section -->
+     <div class="chart-container">
+       <div>
+         <h2>Overall Health</h2>
+         <div id="overallChart" class="chart"></div>
+       </div>
+ 
+       <div>
+         <h2>Mental Health</h2>
+         <div id="mentalChart" class="chart"></div>
+       </div>
+ 
+       <div>
+         <h2>Physical Health</h2>
+         <div id="physicalChart" class="chart"></div>
+       </div>
+ 
+     </div>
+ 
+     <!-- Feedback Section -->
+     <div class="feedback-section">
+       <h2>What Can I Improve?</h2>
+     
+       <div class="feedback-grid">
+         <% const cards = [
+           { title: "Mental Health", feedback: mentalFeedback, idPrefix: "mental" },
+           { title: "Physical Health", feedback: physicalFeedback, idPrefix: "physical" }
+         ]; %>
+     
+         <% cards.forEach(section => { %>
+           <div class="feedback-card">
+             <h3><%= section.title %></h3>
+             <% if (section.feedback && section.feedback.length > 0) { %>
+               <select onchange="showAdvice(this.value, '<%= section.idPrefix %>')">
+                 <option value="">Choose an area to improve</option>
+                 <% section.feedback.forEach((item, index) => { %>
+                   <option value="<%= section.idPrefix %>Advice<%= index %>"><%= item.question %></option>
+                 <% }) %>
+               </select>
+     
+               <% section.feedback.forEach((item, index) => { %>
+                 <div id="<%= section.idPrefix %>Advice<%= index %>" class="advice-text" style="display: none;">
+                   <p><%= item.advice %></p>
+                 </div>
+               <% }) %>
+             <% } else { %>
+               <p class="no-feedback">No feedback yet. Complete the <%= section.title.toLowerCase() %> survey!</p>
+             <% } %>
+           </div>
+         <% }) %>
+     
+         <!-- Centered Overall Health Card -->
+         <div class="overall-row">
+           <div class="feedback-card">
+             <h3>Overall Health</h3>
+             <% if (overallFeedback && overallFeedback.length > 0) { %>
+               <select onchange="showAdvice(this.value, 'overall')">
+                 <option value="">Choose an area to improve</option>
+                 <% overallFeedback.forEach((item, index) => { %>
+                   <option value="overallAdvice<%= index %>"><%= item.question %></option>
+                 <% }) %>
+               </select>
+     
+               <% overallFeedback.forEach((item, index) => { %>
+                 <div id="overallAdvice<%= index %>" class="advice-text" style="display: none;">
+                   <p><%= item.advice %></p>
+                 </div>
+               <% }) %>
+             <% } else { %>
+               <p class="no-feedback">No feedback yet. Complete the overall survey!</p>
+             <% } %>
+           </div>
+         </div>
+       </div>
+     </div>
+     
+     <script>
+       // Function for getting and showing advice
+       function showAdvice(id, prefix) {
+         document.querySelectorAll(`div[id^="${prefix}Advice"]`).forEach(el => el.style.display = 'none');
+         if (id) document.getElementById(id).style.display = 'block';
+       }
+     </script>
+     
+     </div>
+   </div>
+ 
+   <script>
+     document.addEventListener("DOMContentLoaded", function () {
+       const overallData = <%- JSON.stringify(overallData) %> || [null, null, null, null, null, null, null];
+       const mentalData = <%- JSON.stringify(mentalData) %> || [null, null, null, null, null, null, null];
+       const physicalData = <%- JSON.stringify(physicalData) %> || [null, null, null, null, null, null, null];
+       const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+   
+       function drawChart(chartId, title, data) {
+         const validIndices = data
+           .map((val, idx) => ({ val, idx }))
+           .filter(entry => entry.val !== null);
+         
+         const lastEntry = validIndices[validIndices.length - 1];
+         if (!lastEntry) return;
+ 
+         const lastX = days[lastEntry.idx];
+         const lastY = data[lastEntry.idx];
+ 
+         Plotly.newPlot(chartId, [{
+           x: days,
+           y: data,
+           type: 'scatter',
+           mode: 'lines+markers',
+           marker: { color: '#FFFFFF' },
+           line: { color: '#FFFFFF' }
+         }], {
+           title: title,
+           titlefont: { color: '#FFD700' },
+           xaxis: { title: "Days", tickfont: { color: '#37AE0F' }, linecolor: '#37AE0F' },
+           yaxis: { title: "Score", range: [0, 10], tickfont: { color: '#37AE0F' }, linecolor: '#37AE0F' },
+           plot_bgcolor: '#cae9f6',
+           paper_bgcolor: '#cae9f6',
+           images: [{
+             source: "/images/bee.gif",
+             x: lastX,
+             y: lastY,
+             xref: "x",
+             yref: "y",
+             sizex: 3,
+             sizey: 3,
+             xanchor: "center",
+             yanchor: "middle",
+             layer: "above"
+           }]
+         });
+       }
+ 
+       drawChart("overallChart", "Overall Health Progress", overallData);
+       drawChart("mentalChart", "Mental Health Progress", mentalData);
+       drawChart("physicalChart", "Physical Health Progress", physicalData);
+     });
+   </script>
+ 
+ </body>
+ </html>

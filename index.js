@@ -1,4 +1,5 @@
 import express from "express";
+import helmet from "helmet";
 import session from "express-session";
 import dotenv from "dotenv";
 import { handleLogin } from "./login.js";
@@ -18,8 +19,30 @@ app.use(session({
   resave: false, 
   saveUninitialized: true
 }));
+app.use(
+   helmet.contentSecurityPolicy({
+     directives: {
+       defaultSrc: ["'self'"],
+       fontSrc: ["'self'", "https://fonts.gstatic.com"],
+       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+       scriptSrc: ["'self'"]
+     }
+   })
+ );
+ app.use((req, res, next) => {
+   res.setHeader("Content-Security-Policy", "script-src 'self' 'unsafe-inline' https://cdn.plot.ly;");
+   next();
+ });
+
 
 let userProgress = {};
+let surveyResults = {
+   overall: [5],
+   mental: [5],
+   physical: [5],
+   days: []
+ };
+let allResponses = [];
 
 app.get("/", (req, res) => {
   res.redirect("/login");
@@ -41,6 +64,58 @@ app.post("/signup", handleSignup);
 
 app.get("/home", (req, res) => {
   res.render("home");
+});
+
+app.get("/edit-account", async (req, res) => {
+    if (!req.session.user) {
+        return res.redirect("/login"); // Ensure user is logged in
+    }
+
+    try {
+        const [user] = await db.query("SELECT * FROM users WHERE id = ?", [req.session.user.id]);
+
+        if (!user) {
+            return res.redirect("/home"); // Redirect if user not found
+        }
+
+        res.render("edit-account", { user: user[0], error: null }); // Always define error
+    } catch (err) {
+        console.error("Database error:", err);
+        res.render("edit-account", { user: req.session.user, error: "Failed to load account details" });
+    }
+});
+
+app.post("/edit-account", async (req, res) => {
+  if (!req.session.user) {
+    return res.redirect("/login");
+  }
+
+  const userId = req.session.user.id;
+  const { full_name, email, age, gender, password } = req.body;
+
+  try {
+    let query = "UPDATE users SET full_name = ?, email = ?, age = ?, gender = ? WHERE id = ?";
+    let params = [full_name, email, age || null, gender, userId];
+
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      query = "UPDATE users SET full_name = ?, email = ?, age = ?, gender = ?, password = ? WHERE id = ?";
+      params = [full_name, email, age || null, gender, hashedPassword, userId];
+    }
+
+    await db.query(query, params);
+    
+    // Update session data
+    req.session.user.full_name = full_name;
+    req.session.user.email = email;
+    req.session.user.age = age;
+    req.session.user.gender = gender;
+
+    res.redirect("/home");
+  } catch (err) {
+    console.error("Update Error:", err);
+    res.status(500).send("Failed to update account details");
+  }
 });
 
 app.get("/survey", (req, res) => {
