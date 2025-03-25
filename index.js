@@ -139,6 +139,9 @@ app.get("/home", async (req, res) => {
           advice: adviceMap[question] || "No advice available.",
         }));
     }
+    console.log('Overall Data:', overallData);
+    console.log('Mental Data:', mentalData);
+    console.log('Physical Data:', physicalData);
 
     // Render the home page with the filtered survey data
     res.render("home", {
