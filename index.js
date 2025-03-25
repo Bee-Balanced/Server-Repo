@@ -62,7 +62,7 @@ app.get("/signup", (req, res) => {
 });
 app.post("/signup", handleSignup);
 
-app.get("/home", (req, res) => {
+app.get("/home", async (req, res) => {
 if (!req.session.user) {
     return res.redirect("/login");
   }
@@ -75,29 +75,29 @@ if (!req.session.user) {
     const [mental] = await db.query("SELECT * FROM mental_survey WHERE user_id = ?", [userId]);
     const [physical] = await db.query("SELECT * FROM physical_survey WHERE user_id = ?", [userId]);
 
-    // Function to calculate section averages
-    function calculateAverages(data) {
-      const questionAverages = {};
-      data.forEach(({ question, score }) => {
-        if (!questionAverages[question]) {
-          questionAverages[question] = { total: 0, count: 0 };
-        }
-        questionAverages[question].total += score;
-        questionAverages[question].count += 1;
-      });
-
-      return Object.entries(questionAverages).map(([question, data]) => ({
-        question,
-        avgScore: data.total / data.count,
-      }));
+    function initializeWeekArray() {
+      return new Array(7).fill(0);
     }
 
-    const generalAverages = calculateAverages(general);
-    const mentalAverages = calculateAverages(mental);
-    const physicalAverages = calculateAverages(physical);
+// Function to calculate section averages and map them to days of the week
+    function calculateWeeklyAverages(data) {
+      const weekData = initializeWeekArray();
 
-    function getLowestFeedback(sectionAverages) {
-      return sectionAverages
+      data.forEach(({ created_at, score }) => {
+        const dayIndex = new Date(created_at).getDay(); // 0 = Sunday, 6 = Saturday
+        weekData[dayIndex] += score; // Sum scores
+      });
+
+      return weekData;
+    }
+
+    // Convert survey results into weekly arrays
+    const overallData = calculateWeeklyAverages(general);
+    const mentalData = calculateWeeklyAverages(mental);
+    const physicalData = calculateWeeklyAverages(physical);
+
+    function getLowestFeedback(data) {
+      return data
         .sort((a, b) => a.avgScore - b.avgScore)
         .slice(0, 3)
         .map(({ question }) => ({
@@ -107,12 +107,12 @@ if (!req.session.user) {
     }
 
     res.render("home", {
-      overallData: generalAverages,
-      mentalData: mentalAverages,
-      physicalData: physicalAverages,
-      overallFeedback: getLowestFeedback(generalAverages),
-      mentalFeedback: getLowestFeedback(mentalAverages),
-      physicalFeedback: getLowestFeedback(physicalAverages),
+      overallData,
+      mentalData,
+      physicalData,
+      overallFeedback: getLowestFeedback(general),
+      mentalFeedback: getLowestFeedback(mental),
+      physicalFeedback: getLowestFeedback(physical),
     });
   } catch (err) {
     console.error("Database error:", err);
@@ -209,7 +209,7 @@ app.post("/submit-survey", async (req, res) => {
   try {
     const query = `INSERT INTO ${tableName} (user_id, question, score) VALUES (?, ?, ?)`;
     for (const [question, score] of Object.entries(responses)) {
-      await db.query(insertQuery, [userId, question, parseInt(score)]);
+      await db.query(query, [userId, question, parseInt(score)]);
     }
     if (userProgress.general && userProgress.mental && userProgress.physical) {
       return res.redirect("/survey?section=completed");
