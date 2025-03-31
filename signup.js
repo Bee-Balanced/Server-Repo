@@ -1,21 +1,52 @@
 import bcrypt from "bcrypt";
 import db from "./db.js";
 
-export async function handleSignup(req, res) {
-  const { name, email, password, confirm_password, age, gender } = req.body;
+// Function to validate email format
+const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
+// Function to enforce password strength
+const isStrongPassword = (password) =>
+  /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password);
+
+export async function handleSignup(req, res) {
+  let { name, email, password, confirm_password, age, gender } = req.body;
+
+  // Trim inputs to remove unnecessary spaces
+  name = name.trim();
+  email = email.trim().toLowerCase(); // Convert email to lowercase for consistency
+  gender = gender || "Prefer not to answer";
+
+  // Validate email format
+  if (!isValidEmail(email)) {
+    return res.render("signup", { error: "Invalid email format." });
+  }
+
+  // Validate password strength
+  if (!isStrongPassword(password)) {
+    return res.render("signup", {
+      error: "Password must be at least 8 characters long and include a number and special character.",
+    });
+  }
+
+  // Validate password strength
+  if (!isStrongPassword(password)) {
+    return res.render("signup", {
+      error: "Password must be at least 8 characters long and include a number and special character.",
+    });
+  }
+  
   // Validate that the passwords match
   if (password !== confirm_password) {
     return res.render("signup", { error: "Passwords do not match." });
   }
 
+  let conn;
   try {
-        const conn = await db.getConnection();
+        conn = await db.getConnection();
 
         // Check if email already exists
-        const [existingUser] = await conn.query("SELECT * FROM users WHERE email = ?", [email]);
+        const [existingUser] = await conn.query("SELECT id FROM users WHERE LOWER(email) = ?", [email]);
         if (existingUser.length > 0) {
-            conn.release();
             return res.render("signup", { error: "Email is already registered." });
         }
 
@@ -24,12 +55,13 @@ export async function handleSignup(req, res) {
 
         // Insert new user
         await conn.query("INSERT INTO users (full_name, email, password, age, gender) VALUES (?, ?, ?, ?, ?)", 
-            [name, email, hashedPassword, age || null, gender || "Prefer not to answer"]);
+            [name, email, hashedPassword, age || null, gender]);
 
-        conn.release();
         res.redirect("/login"); // Redirect to login after successful signup
     } catch (err) {
         console.error("Error during signup:", err);
         res.status(500).send("Internal Server Error");
+    } finally {
+      if (conn) conn.release(); // Ensure connection is released
     }
 }
