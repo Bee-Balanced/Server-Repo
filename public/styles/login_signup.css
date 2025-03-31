@@ -1,5 +1,6 @@
 body{
     font-family:'Arial',sans-serif;
+    color: #fff;
 }
 
 #background-video{
@@ -20,17 +21,17 @@ body{
     padding: 20px;
 }
 .form-container {
-    background-color: rgba(0, 0, 0, 0.7); 
+    background-color: rgba(0, 0, 0, 0.75); 
     padding: 30px; 
-    border-radius: 8px; 
+    border-radius: 10px; 
     max-width: 400px; 
     width: 100%;
     text-align: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 .form-title {
     font-size: 28px; 
-    color: #fff; 
+    color: #ffcc00; 
     margin-bottom: 20px;
 }
 .input-group {
