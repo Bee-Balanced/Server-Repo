@@ -7,9 +7,10 @@
     <link rel="stylesheet" href="/styles/login_signup.css"/>
 </head>
 <body>
-    <video autoplay muted 100p id="background-video">
+    <video autoplay muted loop id="background-video">
         <source src="/images/Distant_Lights_4K_Motion_Background_Loop.mp4" type="video/mp4">
     </video>
+
     <section class="form-section">
         <div class="form-container">
             <h2 class="form-title">Log in</h2>
@@ -22,12 +23,14 @@
 
             <form action="/login" method="POST">
                 <div class="input-group">
-                    <input type="email" name="email" placeholder="Email" required />
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="Email" required />
                 </div>
                 <div class="input-group">
-                    <input type="password" name="password" placeholder="Password" required />
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Password" required minlength="6" autocomplete="off" />
                 </div>
-                <button type="submit" class="btn">Login</button>
+                <button type="submit" class="btn" id="login-btn">Login</button>
             </form>
 
             <div class="form-footer">
@@ -36,6 +39,14 @@
             </div>
         </div>
     </section>
+
+    <script>
+        // Add loading effect on login button
+        document.querySelector("#login-btn").addEventListener("click", function() {
+            this.innerHTML = "Logging in...";
+            this.disabled = true;
+        });
+    </script>
 </body>
 </html>
 
