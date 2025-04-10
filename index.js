@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import { handleLogin } from "./login.js";
 import { handleSignup } from "./signup.js";
 import db from "./db.js";
-import adviceMap from "./advice.js";
+import { adviceMap, questionMap } from "./advice.js";
 
 dotenv.config();
 
@@ -115,8 +115,16 @@ app.get("/home", async (req, res) => {
     const physicalData = calculateRecentAverages(physical);
 
     // Helper function to get the lowest feedback for each section
-    function getLowestFeedback(data) {
+    function getLowestFeedback(data, sectionName) {
+      const sectionQuestions = questionMap[sectionName];
       return data
+        .map(entry => {
+          const questionText = sectionQuestions[entry.question] || entry.question;
+          return {
+            question: questionText,
+            avgScore: entry.score || 5,
+          };
+        })
         .sort((a, b) => a.avgScore - b.avgScore)
         .slice(0, 3)
         .map(({ question }) => ({
@@ -124,19 +132,16 @@ app.get("/home", async (req, res) => {
           advice: adviceMap[question] || "No advice available.",
         }));
     }
-    console.log('Overall Data:', overallData);
-    console.log('Mental Data:', mentalData);
-    console.log('Physical Data:', physicalData);
 
     // Render the home page with the filtered survey data
     res.render("home", {
-      overallData: overallData,
-      mentalData: mentalData,
-      physicalData: physicalData,
-      days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-      overallFeedback: getLowestFeedback(general),
-      mentalFeedback: getLowestFeedback(mental),
-      physicalFeedback: getLowestFeedback(physical),
+      overallData,
+      mentalData,
+      physicalData,
+      days: weekdays,
+      overallFeedback: getLowestFeedback(general, "general"),
+      mentalFeedback: getLowestFeedback(mental, "mental"),
+      physicalFeedback: getLowestFeedback(physical, "physical"),
     });
   } catch (err) {
     console.error("Database error:", err);

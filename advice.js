@@ -1,4 +1,4 @@
-const adviceMap = {
+export const adviceMap = {
   "I drink 8 glasses of water daily.": "Drinking 8 cups of water daily improves brain function, boosts energy, and supports digestion. Try carrying a water bottle with you to stay on track.",
   "I eat meals regularly.": "Consistent meals keep your metabolism steady and your energy up. Plan meals ahead of time to avoid skipping them.",
   "I feel sluggish and tired most of the time.": "Low energy can signal poor sleep, hydration, or nutrition—addressing these can help. Try winding down an hour earlier and avoid electronics before bed.",
@@ -16,4 +16,26 @@ const adviceMap = {
   "I drink caffeinated drinks excessively.": "Too much caffeine disrupts sleep and can increase anxiety. Gradually reduce your caffeine intake, especially in the afternoon, to improve sleep quality."
 };
 
-export default adviceMap;
+export const questionMap = {
+  general: {
+    q1: "I drink 8 glasses of water daily.",
+    q2: "I eat meals regularly.",
+    q3: "I feel sluggish and tired most of the time.",
+    q4: "I am hopeful about the future."
+    q5: "I am satisfied with my daily life.",
+  },
+  mental: {
+    q1: "I have trouble concentrating.",
+    q2: "I feel disconnected from everyone.",
+    q3: "I feel like I’m the only one struggling.",
+    q4: "I don’t feel I’m as good as everyone.",
+    q5: "I’m sad and unhappy all the time."
+  },
+  physical: {
+    q1: "I use electronic devices after midnight.",
+    q2: "I exercise for 30 minutes or more every day.",
+    q3: "I go outside for the sun at least 10 minutes a day.",
+    q4: "I sleep for 7 to 8 hours.",
+    q5: "I drink caffeinated drinks excessively."
+  }
+};
