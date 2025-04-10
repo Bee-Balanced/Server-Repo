@@ -250,6 +250,11 @@ app.post("/submit-survey", async (req, res) => {
   }
 });
 
+//games
+ app.get('/games', (req, res) => {
+   res.render('games'); // si usas games.ejs en views/
+ });
+
 app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`);
 });
