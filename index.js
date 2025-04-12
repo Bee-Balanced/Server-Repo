@@ -42,9 +42,9 @@ app.use(
 
 let userProgress = {};
 let surveyResults = {
-   overall: [5],
-   mental: [5],
-   physical: [5],
+   overall: [],
+   mental: [],
+   physical: [],
    days: []
  };
 let allResponses = [];
