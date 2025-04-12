@@ -16,94 +16,65 @@
     <div class="home-buttons">
       <a href="/survey" class="btn">Take Today's Survey</a>
     </div>
-    
+
     <!-- Unified Charts & Feedback Section -->
     <div class="chart-feedback-container">
-      
-      <!-- Overall Health Column -->
-      <div class="chart-feedback-item">
-        <h2>Overall Health</h2>
-        <div id="overallChart" class="chart"></div>
-        <div class="feedback-card">
-          <h3>Overall Health</h3>
-          <% if (overallFeedback && overallFeedback.length > 0) { %>
-            <select onchange="showAdvice(this.value, 'overall')">
-              <option value="">Choose an area to improve</option>
-              <% overallFeedback.forEach((item, index) => { %>
-                <option value="overallAdvice<%= index %>"><%= item.question %></option>
+      <!-- Chart + Feedback Blocks for Overall, Mental, and Physical -->
+      <% const sections = ['overall', 'mental', 'physical']; %>
+      <% sections.forEach(section => { %>
+        <div class="chart-feedback-item">
+          <h2><%= section.charAt(0).toUpperCase() + section.slice(1) %> Health</h2>
+          <div id="<%= section %>Chart" class="chart"></div>
+          <div class="feedback-card">
+            <h3><%= section.charAt(0).toUpperCase() + section.slice(1) %> Health</h3>
+            <% if (typeof global[`${section}Feedback`] !== 'undefined' && global[`${section}Feedback`].length > 0) { %>
+              <select onchange="showAdvice(this.value, '<%= section %>')">
+                <option value="">Choose an area to improve</option>
+                <% global[`${section}Feedback`].forEach((item, index) => { %>
+                  <option value="<%= section %>Advice<%= index %>"><%= item.question %></option>
+                <% }) %>
+              </select>
+              <% global[`${section}Feedback`].forEach((item, index) => { %>
+                <div id="<%= section %>Advice<%= index %>" class="advice-text" style="display: none;">
+                  <p><%= item.advice %></p>
+                </div>
               <% }) %>
-            </select>
-            <% overallFeedback.forEach((item, index) => { %>
-              <div id="overallAdvice<%= index %>" class="advice-text" style="display: none;">
-                <p><%= item.advice %></p>
-              </div>
-            <% }) %>
-          <% } else { %>
-            <p class="no-feedback">No feedback yet. Complete the overall survey!</p>
-          <% } %>
+            <% } else { %>
+              <p class="no-feedback">No feedback yet. Complete the <%= section %> survey!</p>
+            <% } %>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+
+    <!-- Calendar Section -->
+    <div class="calendar">
+      <div class="calendar-header">
+        <h2 id="calendar-month" class="calendar-month">Month</h2>
+        <div class="calendar-controls">
+          <button onclick="changeCalendar(-1)">←</button>
+          <h3 id="calendar-type" class="calendar-type">Health Type</h3>
+          <button onclick="changeCalendar(1)">→</button>
         </div>
       </div>
-      
-      <!-- Mental Health Column -->
-      <div class="chart-feedback-item">
-        <h2>Mental Health</h2>
-        <div id="mentalChart" class="chart"></div>
-        <div class="feedback-card">
-          <h3>Mental Health</h3>
-          <% if (mentalFeedback && mentalFeedback.length > 0) { %>
-            <select onchange="showAdvice(this.value, 'mental')">
-              <option value="">Choose an area to improve</option>
-              <% mentalFeedback.forEach((item, index) => { %>
-                <option value="mentalAdvice<%= index %>"><%= item.question %></option>
-              <% }) %>
-            </select>
-            <% mentalFeedback.forEach((item, index) => { %>
-              <div id="mentalAdvice<%= index %>" class="advice-text" style="display: none;">
-                <p><%= item.advice %></p>
-              </div>
-            <% }) %>
-          <% } else { %>
-            <p class="no-feedback">No feedback yet. Complete the mental survey!</p>
-          <% } %>
-        </div>
-      </div>
-      
-      <!-- Physical Health Column -->
-      <div class="chart-feedback-item">
-        <h2>Physical Health</h2>
-        <div id="physicalChart" class="chart"></div>
-        <div class="feedback-card">
-          <h3>Physical Health</h3>
-          <% if (physicalFeedback && physicalFeedback.length > 0) { %>
-            <select onchange="showAdvice(this.value, 'physical')">
-              <option value="">Choose an area to improve</option>
-              <% physicalFeedback.forEach((item, index) => { %>
-                <option value="physicalAdvice<%= index %>"><%= item.question %></option>
-              <% }) %>
-            </select>
-            <% physicalFeedback.forEach((item, index) => { %>
-              <div id="physicalAdvice<%= index %>" class="advice-text" style="display: none;">
-                <p><%= item.advice %></p>
-              </div>
-            <% }) %>
-          <% } else { %>
-            <p class="no-feedback">No feedback yet. Complete the physical survey!</p>
-          <% } %>
-        </div>
-      </div>
-      
+      <table>
+        <thead>
+          <tr>
+            <th>Sunday</th><th>Monday</th><th>Tuesday</th>
+            <th>Wednesday</th><th>Thursday</th><th>Friday</th><th>Saturday</th>
+          </tr>
+        </thead>
+        <tbody id="calendar-body"></tbody>
+      </table>
     </div>
 
     <script>
-      // Function for displaying advice based on selected feedback option.
       function showAdvice(id, prefix) {
         document.querySelectorAll(`div[id^="${prefix}Advice"]`).forEach(el => el.style.display = 'none');
-        if (id) {
-          document.getElementById(id).style.display = 'block';
-        }
+        if (id) document.getElementById(id).style.display = 'block';
       }
     </script>
-    
+
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         const overallData = <%- JSON.stringify(overallData) %> || [null, null, null, null, null, null, null];
@@ -112,14 +83,9 @@
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
         function drawChart(chartId, title, data) {
-          // Filter valid (non-null and non-zero) values.
-          const validIndices = data
-            .map((val, idx) => ({ val, idx }))
-            .filter(entry => entry.val !== null && entry.val !== 0);
-
-          const lastEntry = validIndices[validIndices.length - 1];
+          const validIndices = data.map((val, idx) => ({ val, idx })).filter(entry => entry.val !== null && entry.val !== 0);
+          const lastEntry = validIndices.at(-1);
           if (!lastEntry) return;
-
           const lastX = days[lastEntry.idx];
           const lastY = data[lastEntry.idx];
 
@@ -157,7 +123,84 @@
         drawChart("physicalChart", "Physical Health Progress", physicalData);
       });
     </script>
-    
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const calendarData = {
+          overall: <%- JSON.stringify(calendarTimeline.overall) %>,
+          mental: <%- JSON.stringify(calendarTimeline.mental) %>,
+          physical: <%- JSON.stringify(calendarTimeline.physical) %>
+        };
+
+        let currentTypeIndex = 0;
+        const calendarTypes = ['overall', 'mental', 'physical'];
+
+        function colorForScore(score) {
+          if (score >= 8) return "#00c853";
+          if (score >= 6) return "#64dd17";
+          if (score >= 4) return "#ffd600";
+          if (score >= 2) return "#ff6d00";
+          return "#d50000";
+        }
+
+        function renderCalendar(type) {
+          const today = new Date();
+          const currentMonth = today.getMonth();
+          const currentYear = today.getFullYear();
+          const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+          const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+          const entries = calendarData[type];
+
+          document.getElementById("calendar-month").innerText = today.toLocaleString('default', { month: 'long' });
+          document.getElementById("calendar-type").innerText = `${type.charAt(0).toUpperCase() + type.slice(1)} Health`;
+
+          const calendar = [];
+          let week = [];
+
+          for (let i = 0; i < firstDay; i++) week.push(null);
+          for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(currentYear, currentMonth, day);
+            const dateStr = date.toISOString().split('T')[0];
+            const entry = entries.find(e => e.day === dateStr);
+            week.push({ number: day, avgScore: entry?.avgScore ?? null });
+            if (week.length === 7) { calendar.push(week); week = []; }
+          }
+          while (week.length < 7) week.push(null);
+          calendar.push(week);
+
+          const calendarBody = document.getElementById("calendar-body");
+          calendarBody.innerHTML = "";
+
+          calendar.forEach(rowData => {
+            const row = document.createElement("tr");
+            rowData.forEach(cell => {
+              const td = document.createElement("td");
+              if (cell) {
+                const div = document.createElement("div");
+                div.className = "date-cell";
+                div.style.backgroundColor = cell.avgScore !== null ? colorForScore(cell.avgScore) : "#eeeeee";
+                const numberDiv = document.createElement("div");
+                numberDiv.className = "date-number";
+                numberDiv.textContent = cell.number;
+                div.appendChild(numberDiv);
+                td.appendChild(div);
+              } else {
+                td.classList.add("empty");
+              }
+              row.appendChild(td);
+            });
+            calendarBody.appendChild(row);
+          });
+        }
+
+        window.changeCalendar = function (direction) {
+          currentTypeIndex = (currentTypeIndex + direction + calendarTypes.length) % calendarTypes.length;
+          renderCalendar(calendarTypes[currentTypeIndex]);
+        };
+
+        renderCalendar(calendarTypes[currentTypeIndex]);
+      });
+    </script>
   </div>
 </body>
 </html>
