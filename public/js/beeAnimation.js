@@ -36,11 +36,7 @@ for (const key in images) {
 // Prepare bee data
 const bees = [];
 
-const wellnessScores = [
-  ...(<%- JSON.stringify(overallData || []) %>),
-  ...(<%- JSON.stringify(mentalData || []) %>),
-  ...(<%- JSON.stringify(physicalData || []) %>)
-];
+const wellnessScores = window.wellnessScores || [];
 const validScores = wellnessScores.filter(s => typeof s === "number");
 const averageScore = validScores.length
   ? validScores.reduce((sum, val) => sum + val, 0) / validScores.length
