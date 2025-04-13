@@ -84,6 +84,13 @@
     </div>
     
     <!-- Scripts -->
+    <script>
+      window.wellnessScores = [
+        ...<%- JSON.stringify(overallData || []) %>,
+        ...<%- JSON.stringify(mentalData || []) %>,
+        ...<%- JSON.stringify(physicalData || []) %>
+      ];
+    </script>
     <script src="/js/beeAnimation.js"></script>
     <script>
       function showAdvice(id, prefix) {
