@@ -9,9 +9,20 @@ canvas.height = canvas.offsetHeight;
 const beeImg = new Image();
 beeImg.src = "/images/bee.png";
 
-// Create bee objects
+// Create bee objects based on average wellness score
 const bees = [];
-const numBees = 5; // You can make this dynamic based on survey data
+
+// Calculate average score from global data passed via EJS
+const wellnessScores = [
+  ...(<%- JSON.stringify(overallData || []) %>),
+  ...(<%- JSON.stringify(mentalData || []) %>),
+  ...(<%- JSON.stringify(physicalData || []) %>)
+];
+const validScores = wellnessScores.filter(s => typeof s === "number");
+const averageScore = validScores.length
+  ? validScores.reduce((sum, val) => sum + val, 0) / validScores.length
+  : 5;
+const numBees = Math.min(10, Math.max(1, Math.round(averageScore)));
 
 for (let i = 0; i < numBees; i++) {
   bees.push({
