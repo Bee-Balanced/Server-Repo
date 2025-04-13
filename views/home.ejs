@@ -17,9 +17,45 @@
       <a href="/survey" class="btn">Take Today's Survey</a>
     </div>
 
-    <!-- Unified Charts & Feedback Section -->
+    <!-- Unified Layout for Calendar + Bee Garden -->
+    <div class="dashboard-layout">
+      <!-- Calendar Section -->
+      <div class="calendar">
+        <div class="calendar-header">
+          <h2 id="calendar-month" class="calendar-month">Month</h2>
+          <div class="calendar-controls">
+            <button onclick="changeCalendar(-1)">←</button>
+            <h3 id="calendar-type" class="calendar-type">Health Type</h3>
+            <button onclick="changeCalendar(1)">→</button>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Sunday</th><th>Monday</th><th>Tuesday</th>
+              <th>Wednesday</th><th>Thursday</th><th>Friday</th><th>Saturday</th>
+            </tr>
+          </thead>
+          <tbody id="calendar-body"></tbody>
+        </table>
+      </div>
+
+      <!-- Bee Garden Virtual Pet Window -->
+      <div id="bee-garden-container">
+        <div id="hive-scene">
+          <img id="tree-hive" src="/images/tree_hive_base.png" alt="Tree with Hive">
+          <canvas id="bee-animation-canvas"></canvas>
+          <div id="flower-garden">
+            <img src="/images/flower.png" alt="Flower" class="flower">
+            <img src="/images/flower.png" alt="Flower" class="flower">
+            <img src="/images/flower.png" alt="Flower" class="flower">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Feedback Section -->
     <div class="chart-feedback-container">
-      <!-- Chart + Feedback Blocks for Overall, Mental, and Physical -->
       <% const sections = ['overall', 'mental', 'physical']; %>
       <% sections.forEach(section => { %>
         <div class="chart-feedback-item">
@@ -46,28 +82,9 @@
         </div>
       <% }); %>
     </div>
-
-    <!-- Calendar Section -->
-    <div class="calendar">
-      <div class="calendar-header">
-        <h2 id="calendar-month" class="calendar-month">Month</h2>
-        <div class="calendar-controls">
-          <button onclick="changeCalendar(-1)">←</button>
-          <h3 id="calendar-type" class="calendar-type">Health Type</h3>
-          <button onclick="changeCalendar(1)">→</button>
-        </div>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Sunday</th><th>Monday</th><th>Tuesday</th>
-            <th>Wednesday</th><th>Thursday</th><th>Friday</th><th>Saturday</th>
-          </tr>
-        </thead>
-        <tbody id="calendar-body"></tbody>
-      </table>
-    </div>
-
+    
+    <!-- Scripts -->
+    <script src="/js/beeAnimation.js"></script>
     <script>
       function showAdvice(id, prefix) {
         document.querySelectorAll(`div[id^="${prefix}Advice"]`).forEach(el => el.style.display = 'none');
