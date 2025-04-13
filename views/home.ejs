@@ -17,50 +17,46 @@
       <a href="/survey" class="btn">Take Today's Survey</a>
     </div>
 
-    <!-- Unified Layout for Calendar + Bee Garden -->
-    <div class="dashboard-layout">
-      <!-- Calendar Section -->
-      <div class="calendar">
-        <div class="calendar-header">
-          <h2 id="calendar-month" class="calendar-month">Month</h2>
-          <div class="calendar-controls">
-            <button onclick="changeCalendar(-1)">←</button>
-            <h3 id="calendar-type" class="calendar-type">Health Type</h3>
-            <button onclick="changeCalendar(1)">→</button>
-          </div>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Sunday</th><th>Monday</th><th>Tuesday</th>
-              <th>Wednesday</th><th>Thursday</th><th>Friday</th><th>Saturday</th>
-            </tr>
-          </thead>
-          <tbody id="calendar-body"></tbody>
-        </table>
-      </div>
-
-      <!-- Bee Garden Virtual Pet Window -->
-      <div id="bee-garden-container">
-        <div id="hive-scene">
-          <canvas id="bee-animation-canvas"></canvas>
-          <img id="tree-hive" src="/images/tree.png" alt="Tree" />
-          <div id="flower-garden">
-            <img src="/images/flower.png" alt="Flower" class="flower">
-            <img src="/images/flower.png" alt="Flower" class="flower">
-            <img src="/images/flower.png" alt="Flower" class="flower">
-          </div>
+    <!-- Bee Garden Virtual Pet Window -->
+    <div id="bee-garden-container">
+      <div id="hive-scene">
+        <canvas id="bee-animation-canvas"></canvas>
+        <img id="tree-hive" src="/images/tree.png" alt="Tree" />
+        <div id="flower-garden">
+          <img src="/images/flower.png" alt="Flower" class="flower">
+          <img src="/images/flower.png" alt="Flower" class="flower">
+          <img src="/images/flower.png" alt="Flower" class="flower">
         </div>
       </div>
     </div>
 
-    <!-- Chart Feedback Section -->
+    <!-- Calendar Section -->
+    <div class="calendar">
+      <div class="calendar-header">
+        <h2 id="calendar-month" class="calendar-month">Month</h2>
+        <div class="calendar-controls">
+          <button onclick="changeCalendar(-1)">←</button>
+          <h3 id="calendar-type" class="calendar-type">Health Type</h3>
+          <button onclick="changeCalendar(1)">→</button>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Sunday</th><th>Monday</th><th>Tuesday</th>
+            <th>Wednesday</th><th>Thursday</th><th>Friday</th><th>Saturday</th>
+          </tr>
+        </thead>
+        <tbody id="calendar-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Feedback Section -->
     <div class="chart-feedback-container">
       <% const sections = ['overall', 'mental', 'physical']; %>
       <% sections.forEach(section => { %>
         <div class="chart-feedback-item">
           <h2><%= section.charAt(0).toUpperCase() + section.slice(1) %> Health</h2>
-          <div id="<%= section %>Chart" class="chart"></div>
           <div class="feedback-card">
             <h3><%= section.charAt(0).toUpperCase() + section.slice(1) %> Health</h3>
             <% if (typeof global[`${section}Feedback`] !== 'undefined' && global[`${section}Feedback`].length > 0) { %>
@@ -82,8 +78,16 @@
         </div>
       <% }); %>
     </div>
-    
-    <!-- Scripts -->
+
+    <!-- Charts Section -->
+    <div class="chart-feedback-container">
+      <% sections.forEach(section => { %>
+        <div class="chart-feedback-item">
+          <div id="<%= section %>Chart" class="chart"></div>
+        </div>
+      <% }); %>
+    </div>
+
     <script>
       window.wellnessScores = [
         ...<%- JSON.stringify(overallData || []) %>,
@@ -98,7 +102,6 @@
         if (id) document.getElementById(id).style.display = 'block';
       }
     </script>
-
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         const overallData = <%- JSON.stringify(overallData) %> || [null, null, null, null, null, null, null];
@@ -147,7 +150,6 @@
         drawChart("physicalChart", "Physical Health Progress", physicalData);
       });
     </script>
-
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         const calendarData = {
