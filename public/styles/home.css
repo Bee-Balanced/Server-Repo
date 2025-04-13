@@ -43,136 +43,64 @@ body {
   background: #555;
 }
 
-/* Chart & Feedback Container */
-.chart-feedback-container {
-  display: flex;
-  justify-content: space-around;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 30px;
-  margin-top: 30px;
-}
-
-.chart-feedback-item {
-  flex: 1;
-  min-width: 300px;
-  max-width: 400px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.chart-feedback-item h2 {
-  color: #ffd700;
-  margin-bottom: 10px;
-}
-
-.chart {
+/* Bee Garden Styles */
+#bee-garden-container {
   width: 100%;
-  height: 300px;
-  background-color: #222;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-  margin-bottom: 15px;
-}
-
-/* Feedback Card */
-.feedback-card {
-  background: #fffdf2;
-  border-left: 6px solid #ffd700;
-  border-radius: 12px;
+  background: #eefbe9;
   padding: 20px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease;
-  width: 90%;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  margin-top: 30px;
+  position: relative;
 }
 
-.feedback-card:hover {
-  transform: scale(1.02);
-}
-
-.feedback-card h3 {
-  margin-bottom: 10px;
-  color: #222;
-}
-
-.feedback-card select {
+#hive-scene {
+  position: relative;
   width: 100%;
-  padding: 8px;
-  font-size: 1em;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  margin-bottom: 10px;
+  height: 400px;
+  overflow: hidden;
 }
 
-/* Advice Text */
-.advice-text {
-  background-color: #f9f2d1;
-  border-left: 5px solid #ffd700;
-  padding: 15px;
-  border-radius: 5px;
-  font-size: 0.95em;
-  animation: fadeIn 0.3s ease;
+#tree-hive {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
+#bee-animation-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
 }
 
-.no-feedback {
-  color: #999;
-  font-style: italic;
-}
-
-/* Navigation Bar */
-.navbar {
+#flower-garden {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background-color: #222;
-  padding: 15px 20px;
+  gap: 10px;
+  z-index: 2;
 }
 
-.navbar .logo {
-  font-size: 24px;
-  font-weight: bold;
-  color: #ffd700;
-}
-
-.navbar .nav-links {
-  display: flex;
-  gap: 20px;
-}
-
-.navbar a {
-  color: white;
-  text-decoration: none;
-  font-size: 18px;
-  padding: 10px 15px;
-  transition: background 0.3s ease;
-}
-
-.navbar a:hover {
-  background-color: #444;
-  border-radius: 5px;
-}
-
-/* Select */
-select {
-  padding: 10px;
-  font-size: 16px;
-  margin-top: 10px;
+.flower {
+  width: 50px;
+  height: auto;
 }
 
 /* Calendar Styles */
 .calendar {
-  margin-top: 50px;
+  margin: 50px auto;
   font-family: Arial, sans-serif;
   max-width: 600px;
-  margin-left: 0;
-  margin-right: auto;
   background-color: #cae9f6;
   border-radius: 8px;
   padding: 20px;
@@ -335,66 +263,12 @@ select {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Existing styles above this point remain unchanged */
-
-/* === Bee Garden Styles === */
-.dashboard-layout {
+/* Chart & Feedback Container */
+.chart-feedback-container {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: flex-start;
   flex-wrap: wrap;
-  gap: 40px;
-  margin-top: 40px;
-}
-
-#bee-garden-container {
-  flex: 1;
-  max-width: 500px;
-  background: #eefbe9;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  position: relative;
-}
-
-#hive-scene {
-  position: relative;
-  width: 100%;
-  height: 400px;
-  overflow: hidden;
-}
-
-#tree-hive {
-  width: 100%;
-  height: auto;
-  object-fit: contain;
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 1;
-}
-
-#bee-animation-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  pointer-events: none;
-}
-
-#flower-garden {
-  position: absolute;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 10px;
-  z-index: 2;
-}
-
-.flower {
-  width: 50px;
-  height: auto;
+  gap: 30px;
+  margin-top: 30px;
 }
