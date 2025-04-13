@@ -1,3 +1,5 @@
+// beeAnimation.js
+
 const canvas = document.getElementById("bee-animation-canvas");
 const ctx = canvas.getContext("2d");
 canvas.width = canvas.offsetWidth;
