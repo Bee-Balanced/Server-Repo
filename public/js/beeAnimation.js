@@ -1,28 +1,30 @@
-// beeAnimation.js
-
 const canvas = document.getElementById("bee-animation-canvas");
 const ctx = canvas.getContext("2d");
+
+// Make canvas responsive to container size
 canvas.width = canvas.offsetWidth;
 canvas.height = canvas.offsetHeight;
 
 // Load all images
 const images = {
   bee: new Image(),
-  sky: new Image(),
-  sun: new Image(),
-  cloud: new Image(),
+  background: new Image(),
+  tree: new Image(),
+  hive: new Image(),
   house: new Image(),
+  flower: new Image(),
   grass: new Image()
 };
 
 images.bee.src = "/images/bee.png";
-images.sky.src = "/images/sky.png";
-images.sun.src = "/images/sun.png";
-images.cloud.src = "/images/cloud.png";
+images.background.src = "/images/background_sky.jpg";
+images.tree.src = "/images/tree.png";
+images.hive.src = "/images/bee_hive.png";
 images.house.src = "/images/house.png";
+images.flower.src = "/images/flower.png";
 images.grass.src = "/images/grass.png";
 
-// Wait for all images to load before animating
+// Wait for all images to load
 let loadedImages = 0;
 const totalImages = Object.keys(images).length;
 
@@ -37,7 +39,6 @@ for (const key in images) {
 
 // Prepare bee data
 const bees = [];
-
 const wellnessScores = window.wellnessScores || [];
 const validScores = wellnessScores.filter(s => typeof s === "number");
 const averageScore = validScores.length
@@ -72,11 +73,33 @@ function drawBee(bee) {
 }
 
 function drawBackground() {
-  ctx.drawImage(images.sky, 0, 0, canvas.width, canvas.height);
-  ctx.drawImage(images.sun, canvas.width - 100, 20, 80, 80);
-  ctx.drawImage(images.cloud, 100, 40, 100, 60);
-  ctx.drawImage(images.cloud, 250, 70, 100, 60);
-  ctx.drawImage(images.house, 40, canvas.height - 160, 150, 150);
+  // Draw background sky
+  ctx.drawImage(images.background, 0, 0, canvas.width, canvas.height);
+
+  // House on far left
+  ctx.drawImage(images.house, 20, canvas.height - 140, 120, 120);
+
+  // Tree on far right
+  const treeWidth = 150;
+  const treeX = canvas.width - treeWidth - 20;
+  const treeY = canvas.height - 240;
+  ctx.drawImage(images.tree, treeX, treeY, treeWidth, 220);
+
+  // Hive hanging from the tree
+  ctx.drawImage(images.hive, treeX + 50, treeY + 50, 50, 50);
+
+  // Flower bed (centered at bottom)
+  const flowerY = canvas.height - 90;
+  const spacing = 60;
+  const totalFlowers = 3;
+  const flowerWidth = 50;
+  const startX = (canvas.width - (flowerWidth * totalFlowers + spacing * (totalFlowers - 1))) / 2;
+  for (let i = 0; i < totalFlowers; i++) {
+    const x = startX + i * (flowerWidth + spacing);
+    ctx.drawImage(images.flower, x, flowerY, flowerWidth, 60);
+  }
+
+  // Grass overlay at the very bottom
   ctx.drawImage(images.grass, 0, canvas.height - 60, canvas.width, 60);
 }
 
