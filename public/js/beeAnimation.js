@@ -30,10 +30,15 @@ const totalImages = Object.keys(images).length;
 
 for (const key in images) {
   images[key].onload = () => {
+    console.log(`${key} loaded`);
     loadedImages++;
     if (loadedImages === totalImages) {
+      console.log("All images loaded. Starting animation...");
       startAnimation();
     }
+  };
+  images[key].onerror = () => {
+    console.error(`Failed to load ${key}: ${images[key].src}`);
   };
 }
 
