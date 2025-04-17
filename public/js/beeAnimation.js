@@ -62,7 +62,7 @@ for (let i = 0; i < numBees; i++) {
 function updateBee(bee) {
   bee.x += bee.dx;
   bee.y += bee.dy;
-  bee.angle += 0.05;
+  bee.angle = Math.atan2(bee.dy, bee.dx);
   if (bee.x < 0 || bee.x > canvas.width) bee.dx *= -1;
   if (bee.y < 0 || bee.y > canvas.height) bee.dy *= -1;
 }
