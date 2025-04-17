@@ -55,14 +55,13 @@ for (let i = 0; i < numBees; i++) {
     y: Math.random() * canvas.height,
     dx: Math.random() * 2 - 1,
     dy: Math.random() * 2 - 1,
-    angle: Math.random() * Math.PI * 2
   });
 }
 
 function updateBee(bee) {
   bee.x += bee.dx;
   bee.y += bee.dy;
-  bee.angle = Math.atan2(bee.dy, bee.dx);
+
   if (bee.x < 0 || bee.x > canvas.width) bee.dx *= -1;
   if (bee.y < 0 || bee.y > canvas.height) bee.dy *= -1;
 }
@@ -70,8 +69,12 @@ function updateBee(bee) {
 function drawBee(bee) {
   ctx.save();
   ctx.translate(bee.x, bee.y);
-  ctx.rotate(bee.angle);
-  ctx.drawImage(images.bee, -12, -12, 24, 24);
+
+  const facingLeft = bee.dx < 0;
+  ctx.scale(facingLeft ? -1 : 1, 1); // Flip bee based on direction
+
+  // Adjust x-offset when flipping so it draws in the correct position
+  ctx.drawImage(images.bee, facingLeft ? -12 : -12, -12, 24, 24);
   ctx.restore();
 }
 
@@ -82,14 +85,14 @@ function drawBackground() {
   // House on far left
   ctx.drawImage(images.house, 20, canvas.height - 140, 120, 120);
 
-  // Tree on far right
+  // Tree on far left
   const treeWidth = 150;
-  const treeX = canvas.width - treeWidth - 20;
+  const treeX = 20;
   const treeY = canvas.height - 240;
   ctx.drawImage(images.tree, treeX, treeY, treeWidth, 220);
 
   // Hive hanging from the tree
-  ctx.drawImage(images.hive, treeX + 50, treeY + 50, 50, 50);
+  ctx.drawImage(images.hive, treeX + 60, treeY + 60, 50, 50);
 
   // Flower bed (centered at bottom)
   const flowerY = canvas.height - 90;
@@ -116,3 +119,4 @@ function animateBees() {
 function startAnimation() {
   animateBees();
 }
+
