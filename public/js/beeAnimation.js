@@ -12,7 +12,7 @@ const images = {
   flower: new Image(),
 };
 
-images.bee.src = "/images/bee.png";
+images.bee.src = "/images/bee.gif";
 images.background.src = "/images/background_sky.jpg";
 images.tree.src = "/images/tree.png";
 images.hive.src = "/images/bee_hive.png";
