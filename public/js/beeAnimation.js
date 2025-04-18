@@ -109,10 +109,15 @@ function drawBee(bee) {
   ctx.save();
   ctx.translate(bee.x, bee.y);
   const facingLeft = bee.target ? bee.target.x < bee.x : false;
-  ctx.scale(facingLeft ? -1 : 1, 1);
-  ctx.drawImage(images.bee, facingLeft ? -12 : -12, -12, 24, 24);
+  if (facingLeft) {
+    ctx.scale(-1, 1);
+    ctx.drawImage(images.bee, -12, -12, 24, 24);
+  } else {
+    ctx.scale(1, 1);
+    ctx.drawImage(images.bee, -12, -12, 24, 24);
+  }
   ctx.restore();
-}
+}}
 
 function drawBackground() {
   ctx.drawImage(images.background, 0, 0, canvas.width, canvas.height);
