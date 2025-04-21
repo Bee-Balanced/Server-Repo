@@ -51,6 +51,32 @@
              position: relative;
              z-index: 1;
          }
+         .locked {
+           position: relative;
+           opacity: 0.6;
+           pointer-events: none;
+         }
+         
+         .locked .overlay {
+           position: absolute;
+           top: 0;
+           left: 0;
+           right: 0;
+           bottom: 0;
+           background-color: rgba(0, 0, 0, 0.6);
+           color: white;
+           display: flex;
+           justify-content: center;
+           align-items: center;
+           font-size: 1rem;
+           border-radius: 15px;
+           pointer-events: auto;
+         }
+         
+         .locked:hover .overlay {
+           background-color: rgba(0, 0, 0, 0.75);
+         }
+
      </style>
  </head>
  <body>
