@@ -89,6 +89,11 @@ app.get("/home", async (req, res) => {
   const today = new Date().getDay();
   const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const calendarView = req.query.calendarView || "overall";
+  const [planted] = await db.query(`
+    SELECT pf.spot_index, f.image FROM planted_flowers pf
+    JOIN flowers f ON f.id = pf.flower_id
+    WHERE pf.user_id = ?
+  `, [userId]);
 
   if (surveyResults.days.length === 0 && allResponses.length === 0) {
     while (surveyResults.days.length < today) {
@@ -147,6 +152,7 @@ app.get("/home", async (req, res) => {
     physicalFeedback: getLowestFeedback(physical, "physical"),
     calendarTimeline,
     calendarView
+    plantedFlowers: planted,
   });
 });
 
