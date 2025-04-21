@@ -225,4 +225,41 @@ app.post("/submit-survey", async (req, res) => {
 
 app.get("/games", (req, res) => res.render("games"));
 
+app.get("/shop", async (req, res) => {
+  if (!req.session.user) return res.redirect("/login");
+  const userId = req.session.user.id;
+  const [[user]] = await db.query("SELECT coins FROM users WHERE id = ?", [userId]);
+  const [flowers] = await db.query("SELECT * FROM flowers");
+  res.render("shop", { user, flowers });
+});
+
+app.post("/buy-flower", async (req, res) => {
+  if (!req.session.user) return res.redirect("/login");
+  const userId = req.session.user.id;
+  const { flowerId } = req.body;
+  const [[user]] = await db.query("SELECT coins FROM users WHERE id = ?", [userId]);
+  const [[flower]] = await db.query("SELECT * FROM flowers WHERE id = ?", [flowerId]);
+  if (!flower || user.coins < flower.price) return res.status(400).send("Not enough coins");
+  await db.query("UPDATE users SET coins = coins - ? WHERE id = ?", [flower.price, userId]);
+  res.redirect("/plant?flowerId=" + flowerId);
+});
+
+app.get("/plant", (req, res) => {
+  if (!req.session.user) return res.redirect("/login");
+  const { flowerId } = req.query;
+  res.render("plant", { flowerId }); // user selects 1 of 15 spots here
+});
+
+app.post("/plant", async (req, res) => {
+  if (!req.session.user) return res.redirect("/login");
+  const userId = req.session.user.id;
+  const { flowerId, spotIndex } = req.body;
+  await db.query(`
+    INSERT INTO planted_flowers (user_id, spot_index, flower_id)
+    VALUES (?, ?, ?)
+    ON DUPLICATE KEY UPDATE flower_id = VALUES(flower_id)
+  `, [userId, spotIndex, flowerId]);
+  res.redirect("/home");
+});
+
 app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
