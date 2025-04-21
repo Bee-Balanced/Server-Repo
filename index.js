@@ -151,7 +151,7 @@ app.get("/home", async (req, res) => {
     mentalFeedback: getLowestFeedback(mental, "mental"),
     physicalFeedback: getLowestFeedback(physical, "physical"),
     calendarTimeline,
-    calendarView
+    calendarView,
     plantedFlowers: planted,
   });
 });
