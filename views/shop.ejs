@@ -9,18 +9,19 @@
 <body>
   <%- include('partials/navbar') %>
   <div class="home-container">
-    <h1>Flower Shop</h1>
+    <h1>🌼 Flower Shop</h1>
     <p>You have <strong><%= user.coins %></strong> coins.</p>
 
-    <div class="chart-feedback-container">
+    <div class="flower-shop-grid">
       <% flowers.forEach(flower => { %>
-        <div class="chart-feedback-item">
-          <img src="<%= flower.image %>" alt="<%= flower.name %>" style="width: 80px; height: auto;">
+        <div class="flower-card">
+          <img src="<%= flower.image %>" alt="<%= flower.name %>" class="flower-image">
           <h3><%= flower.name %></h3>
           <p>Price: <%= flower.price %> coins</p>
+
           <% if (user.coins >= flower.price) { %>
             <form action="/buy-flower" method="POST">
-              <input type="hidden" name="flower_id" value="<%= flower.id %>">
+              <input type="hidden" name="flowerId" value="<%= flower.id %>">
               <button class="btn" type="submit">Buy & Plant</button>
             </form>
           <% } else { %>
@@ -32,3 +33,4 @@
   </div>
 </body>
 </html>
+
