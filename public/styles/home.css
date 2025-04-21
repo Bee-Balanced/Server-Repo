@@ -387,3 +387,28 @@
   width: 50px;
   height: auto;
 }
+
+.flower-shop-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.flower-card {
+  background: #fffdf2;
+  border: 2px solid #ffd700;
+  border-radius: 12px;
+  padding: 15px;
+  width: 200px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.flower-image {
+  width: 100px;
+  height: auto;
+  margin-bottom: 10px;
+}
+
