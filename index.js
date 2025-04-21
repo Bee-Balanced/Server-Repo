@@ -229,7 +229,20 @@ app.post("/submit-survey", async (req, res) => {
   }
 });
 
-app.get("/games", (req, res) => res.render("games"));
+app.get("/games", async (req, res) => {
+  if (!req.session.user) return res.redirect("/login");
+  const userId = req.session.user.id;
+
+  const [[{ totalSurveys }]] = await db.query(`
+    SELECT 
+      (SELECT COUNT(*) FROM general_survey WHERE user_id = ?) +
+      (SELECT COUNT(*) FROM mental_survey WHERE user_id = ?) +
+      (SELECT COUNT(*) FROM physical_survey WHERE user_id = ?)
+      AS totalSurveys
+  `, [userId, userId, userId]);
+
+  res.render("games", { totalSurveys });
+});
 
 app.get("/shop", async (req, res) => {
   if (!req.session.user) return res.redirect("/login");
