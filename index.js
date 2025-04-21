@@ -209,6 +209,10 @@ app.post("/submit-survey", async (req, res) => {
     else if (section === "physical") surveyResults.physical.push(avgScore);
 
     userProgress[section] = true;
+
+    const coinsEarned = avgScore >= 8 ? 10 : avgScore >= 5 ? 5 : 2;
+    await db.query("UPDATE users SET coins = coins + ? WHERE id = ?", [coinsEarned, userId]);
+
     if (userProgress.general && userProgress.mental && userProgress.physical) {
       return res.redirect("/survey?section=completed");
     }
