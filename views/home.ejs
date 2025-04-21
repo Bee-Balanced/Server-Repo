@@ -87,6 +87,10 @@
     </div>
 
     <script>
+      window.plantedFlowers = <%- JSON.stringify(plantedFlowers) %>;
+    </script>
+
+    <script>
       window.wellnessScores = [
         ...<%- JSON.stringify(overallData || []) %>,
         ...<%- JSON.stringify(mentalData || []) %>,
