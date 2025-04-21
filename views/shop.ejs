@@ -1,0 +1,14 @@
+<h1>Flower Shop</h1>
+<p>You have <%= user.coins %> coins</p>
+<div class="shop-grid">
+  <% flowers.forEach(flower => { %>
+    <div class="shop-item">
+      <img src="<%= flower.image %>" />
+      <p><%= flower.name %> - <%= flower.price %> coins</p>
+      <form action="/buy-flower" method="POST">
+        <input type="hidden" name="flowerId" value="<%= flower.id %>" />
+        <button type="submit">Buy</button>
+      </form>
+    </div>
+  <% }) %>
+</div>
