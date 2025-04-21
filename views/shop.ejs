@@ -1,14 +1,34 @@
-<h1>Flower Shop</h1>
-<p>You have <%= user.coins %> coins</p>
-<div class="shop-grid">
-  <% flowers.forEach(flower => { %>
-    <div class="shop-item">
-      <img src="<%= flower.image %>" />
-      <p><%= flower.name %> - <%= flower.price %> coins</p>
-      <form action="/buy-flower" method="POST">
-        <input type="hidden" name="flowerId" value="<%= flower.id %>" />
-        <button type="submit">Buy</button>
-      </form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flower Shop</title>
+  <link rel="stylesheet" href="/styles/home.css">
+</head>
+<body>
+  <%- include('partials/navbar') %>
+  <div class="home-container">
+    <h1>Flower Shop</h1>
+    <p>You have <strong><%= user.coins %></strong> coins.</p>
+
+    <div class="chart-feedback-container">
+      <% flowers.forEach(flower => { %>
+        <div class="chart-feedback-item">
+          <img src="<%= flower.image %>" alt="<%= flower.name %>" style="width: 80px; height: auto;">
+          <h3><%= flower.name %></h3>
+          <p>Price: <%= flower.price %> coins</p>
+          <% if (user.coins >= flower.price) { %>
+            <form action="/buy-flower" method="POST">
+              <input type="hidden" name="flower_id" value="<%= flower.id %>">
+              <button class="btn" type="submit">Buy & Plant</button>
+            </form>
+          <% } else { %>
+            <p style="color: red;">Not enough coins</p>
+          <% } %>
+        </div>
+      <% }) %>
     </div>
-  <% }) %>
-</div>
+  </div>
+</body>
+</html>
