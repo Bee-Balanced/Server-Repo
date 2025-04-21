@@ -250,10 +250,13 @@ app.post("/buy-flower", async (req, res) => {
   res.redirect("/plant?flowerId=" + flowerId);
 });
 
-app.get("/plant", (req, res) => {
+app.get("/plant", async (req, res) => {
   if (!req.session.user) return res.redirect("/login");
+  const userId = req.session.user.id;
   const { flowerId } = req.query;
-  res.render("plant", { flowerId }); // user selects 1 of 15 spots here
+  const [[flower]] = await db.query("SELECT * FROM flowers WHERE id = ?", [flowerId]);
+  const [plantedFlowers] = await db.query("SELECT spot_index FROM planted_flowers WHERE user_id = ?", [userId]);
+  res.render("plant", { flower, plantedFlowers });
 });
 
 app.post("/plant", async (req, res) => {
