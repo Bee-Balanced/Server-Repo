@@ -29,7 +29,7 @@
  }
  
  /* Button Styles */
- .home-buttons .btn {
+ .btn {
    display: inline-block;
    background: #333;
    color: #ffd700;
@@ -39,7 +39,7 @@
    margin: 10px;
  }
  
- .home-buttons .btn:hover {
+ .btn:hover {
    background: #555;
  }
  
