@@ -1,39 +1,60 @@
+// login.js - handles POST login logic and session setup
 import bcrypt from "bcrypt";
 import db from "./db.js";
 
+const INVALID_LOGIN_MSG = "Invalid email or password. Please try again.";
+
 export async function handleLogin(req, res) {
   const { email, password } = req.body;
+  if (!email || !password) {
+    return res.render("login", { error: INVALID_LOGIN_MSG });
+  }
+
   const normalizedEmail = email.trim().toLowerCase();
   let conn;
-  
+
   try {
     conn = await db.getConnection();
 
     // Query the database for the user
-    const [rows] = await conn.query("SELECT * FROM users WHERE email = ?", [normalizedEmail]);
-    conn.release();
+    const [rows] = await conn.query(
+      "SELECT * FROM users WHERE email = ?",
+      [normalizedEmail]
+    );
 
     if (rows.length === 0) {
-      await bcrypt.compare(password, "$2b$10$invalidsalt12345678901234567890"); // Fake compare to prevent timing attacks
-      return res.render("login", { error: "Invalid email or password. Please try again." });
+      // Fake hash check for security
+      await bcrypt.compare(password, "$2b$10$invalidsalt12345678901234567890");
+      return res.render("login", { error: INVALID_LOGIN_MSG });
     }
 
     const user = rows[0];
 
+    // Check if password field exists just in case
+    if (!user.password) {
+      return res.render("login", { error: INVALID_LOGIN_MSG });
+    }
+
     // Compare the password with the hashed password stored in the database
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.render("login", { error: "Invalid email or password. Please try again." });
+      return res.render("login", { error: INVALID_LOGIN_MSG });
     }
 
     // Store user session
-    req.session.user = { id: user.id, name: user.full_name, email: normalizedEmail, is_admin: user.is_admin, country: user.country };
+    req.session.user = {
+      id: user.id,
+      name: user.full_name,
+      email: normalizedEmail,
+      is_admin: user.is_admin,
+      country: user.country,
+    };
 
-    res.redirect("/home"); // Redirect to survey after successful login
+    res.redirect("/home");
   } catch (err) {
     console.error("Error during login:", err);
     res.status(500).send("Internal Server Error");
   } finally {
-    if (conn) conn.release(); // Ensure connection is released
+    if (conn) conn.release();
   }
 }
