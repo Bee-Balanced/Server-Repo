@@ -3,7 +3,10 @@ import bcrypt from "bcrypt";
 import db from "./db.js";
 
 // Basic email validation regex
-const isValidEmail = (email) => /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email);
+const isValidEmail = (email) => {
+  const trimmed = email.trim().toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+};
 
 const ERRORS = {
   invalidEmail: "Invalid email format.",
