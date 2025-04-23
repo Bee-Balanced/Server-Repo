@@ -40,6 +40,10 @@ export async function handleSignup(req, res) {
     return res.render("signup", { error: ERRORS.passwordMismatch });
   }
 
+  if (password.length < 6) {
+    return res.render("signup", { error: "Password must be at least 6 characters long." });
+  }
+
   let conn;
   try {
     conn = await db.getConnection();
