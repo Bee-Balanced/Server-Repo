@@ -1,3 +1,5 @@
+// advice.js - maps survey questions to advice and stores question categories
+
 export const adviceMap = {
   "I drink 8 glasses of water daily.": "Drinking 8 cups of water daily improves brain function, boosts energy, and supports digestion. Try carrying a water bottle with you to stay on track.",
   "I eat meals regularly.": "Consistent meals keep your metabolism steady and your energy up. Plan meals ahead of time to avoid skipping them.",
@@ -39,3 +41,8 @@ export const questionMap = {
     q5: "I drink caffeinated drinks excessively."
   }
 };
+
+export function getAdviceFor(question) {
+  return adviceMap[question] || "No advice available.";
+}
+
