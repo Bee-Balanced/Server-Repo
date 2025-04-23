@@ -1,13 +1,21 @@
+// sendReminders.js - schedules and sends reminder emails using Knock every 3 days
+
 import { Knock } from "@knocklabs/node";
 import nodeSchedule from "node-schedule";
 import db from "./db.js";
 
-const knock = new Knock(process.env.KNOCK_API_KEY);
+if (!process.env.KNOCK_API_KEY) {
+  throw new Error("❌ KNOCK_API_KEY is not defined in your environment.");
+}
 
-// send the email using knock
+const knock = new Knock(process.env.KNOCK_API_KEY);
+const anchorDate = new Date("2025-01-01");
+const msPerDay = 1000 * 60 * 60 * 24;
+const scheduleTime = "0 12 * * *"; // every day at 12:00 PM
+
+// send a single email using Knock
 const sendEmail = async (email, name) => {
   try {
-    // trigger the reminder workflow and email
     await knock.workflows.trigger("reminder", {
       recipients: [{ id: email, email }],
       data: {
@@ -17,33 +25,31 @@ const sendEmail = async (email, name) => {
         name,
       },
     });
+    console.log(`✅ Sent reminder to ${email}`);
   } catch (err) {
-    // catch any errors with sending emails
-    console.error(`Failed to send email to ${email}`, err.message);
+    console.error(`❌ Failed to send email to ${email}:`, err.message);
   }
 };
 
-// anchor date to check for every three days
-const anchorDate = new Date("2025-01-01");
-
+// run a daily scheduled job to check if a reminder should be sent
 const scheduleReminderJob = () => {
-  // email at 12pm
-  nodeSchedule.scheduleJob("0 12 * * *", async () => {
+  nodeSchedule.scheduleJob(scheduleTime, async () => {
     const today = new Date();
-    const msPerDay = 1000 * 60 * 60 * 24;
-
-    // check if its been three days
     const daysSinceAnchor = Math.floor((today - anchorDate) / msPerDay);
+
     if (daysSinceAnchor % 3 === 0) {
+      console.log("📧 Sending reminders to eligible users...");
 
       try {
         const [users] = await db.query("SELECT email, full_name FROM users");
-        const promises = users
+        const emails = users
           .filter(user => user.email)
           .map(user => sendEmail(user.email, user.full_name));
-        await Promise.all(promises);
+
+        await Promise.all(emails);
+        console.log("✅ All reminders sent.");
       } catch (err) {
-        console.error("Failed to send emails:", err.message);
+        console.error("❌ Failed to fetch users or send reminders:", err.message);
       }
     }
   });
