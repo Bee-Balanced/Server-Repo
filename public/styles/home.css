@@ -466,3 +466,11 @@
   margin-bottom: 10px;
 }
 
+.flower-info {
+  flex-grow: 1;
+}
+
+.flower-action {
+  margin-top: auto;
+}
+
