@@ -451,7 +451,7 @@
   border-radius: 12px;
   padding: 15px;
   width: 200px;
-  height: 300px; /* Added fixed height */
+  height: 320px; /* Added fixed height */
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   text-align: center;
   display: flex;
@@ -461,7 +461,8 @@
 
 .flower-image {
   width: 100px;
-  height: auto;
+  height: 100px; /* force consistent image height */
+  object-fit: contain;
   margin-bottom: 10px;
 }
 
