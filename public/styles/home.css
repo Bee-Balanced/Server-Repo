@@ -451,7 +451,6 @@
   border-radius: 12px;
   padding: 15px;
   width: 200px;
-  height: 330px; /* Set fixed height */
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   text-align: center;
   display: flex;
