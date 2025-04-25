@@ -19,14 +19,16 @@
           <h3><%= flower.name %></h3>
           <p>Price: <%= flower.price %> coins</p>
 
-          <% if (user.coins >= flower.price) { %>
-            <form action="/buy-flower" method="POST">
-              <input type="hidden" name="flowerId" value="<%= flower.id %>">
-              <button class="btn" type="submit">Buy & Plant</button>
-            </form>
-          <% } else { %>
-            <p style="color: red;">Not enough coins</p>
-          <% } %>
+          <div style="margin-top: auto;">
+            <% if (user.coins >= flower.price) { %>
+              <form action="/buy-flower" method="POST">
+                <input type="hidden" name="flowerId" value="<%= flower.id %>">
+                <button class="btn" type="submit">Buy & Plant</button>
+              </form>
+            <% } else { %>
+              <p style="color: red;">Not enough coins</p>
+            <% } %>
+          </div>
         </div>
       <% }) %>
     </div>
