@@ -25,31 +25,45 @@
             data-index="<%= i %>"
             onclick="selectSpot(<%= i %>, <%= existing ? 'true' : 'false' %>)"
           >
-            <%= existing ? '🌸' : (i + 1) %>
+            <% if (existing) { %>
+              🌸
+            <% } else { %>
+              <span class="spot-number"><%= i + 1 %></span>
+              <div class="preview"></div>
+            <% } %>
           </div>
         <% } %>
       </div>
-    
       <button class="btn" type="submit" id="plantBtn" disabled>Plant Here</button>
     </form>
   </div>
   <script>
-    function selectSpot(index, filled) {
-      if (filled) {
-        alert("This spot already has a flower. Choose another.");
-        return;
-      }
-  
-      document.querySelectorAll(".plant-spot").forEach(spot => {
-        spot.classList.remove("selected");
-      });
-  
-      const selected = document.querySelector(`.plant-spot[data-index="${index}"]`);
-      selected.classList.add("selected");
-  
-      document.getElementById("spotIndexInput").value = index;
-      document.getElementById("plantBtn").disabled = false;
+  function selectSpot(index, filled) {
+    if (filled) {
+      alert("This spot already has a flower. Choose another.");
+      return;
     }
-  </script>
+
+    document.querySelectorAll(".plant-spot").forEach(spot => {
+      spot.classList.remove("selected");
+      const preview = spot.querySelector(".preview");
+      if (preview) preview.innerHTML = ""; // Clear preview
+    });
+
+    const selected = document.querySelector(`.plant-spot[data-index="${index}"]`);
+    selected.classList.add("selected");
+
+    const preview = selected.querySelector(".preview");
+    if (preview) {
+      const img = document.createElement("img");
+      img.src = "<%= flower.image %>";  // Render the flower image from backend
+      img.className = "preview-image";
+      preview.appendChild(img);
+    }
+
+    document.getElementById("spotIndexInput").value = index;
+    document.getElementById("plantBtn").disabled = false;
+  }
+</script>
 </body>
 </html>
