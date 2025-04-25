@@ -8,8 +8,7 @@ const images = {
   background: new Image(),
   tree: new Image(),
   hive: new Image(),
-  house: new Image(),
-  flower: new Image(),
+  house: new Image()
 };
 
 images.bee.src = "/images/bee.png";
@@ -17,7 +16,6 @@ images.background.src = "/images/background_sky.jpg";
 images.tree.src = "/images/tree.png";
 images.hive.src = "/images/bee_hive.png";
 images.house.src = "/images/house.png";
-images.flower.src = "/images/flower.png";
 
 let loadedImages = 0;
 const totalImages = Object.keys(images).length;
@@ -33,6 +31,23 @@ for (const key in images) {
 }
 
 const bees = [];
+const flowerSpots = [
+  { x: 100, y: canvas.height - 70 }, { x: 160, y: canvas.height - 70 },
+  { x: 220, y: canvas.height - 70 }, { x: 280, y: canvas.height - 70 },
+  { x: 340, y: canvas.height - 70 }, { x: 400, y: canvas.height - 70 },
+  { x: 460, y: canvas.height - 70 }, { x: 520, y: canvas.height - 70 },
+  { x: 580, y: canvas.height - 70 }, { x: 640, y: canvas.height - 70 },
+  { x: 700, y: canvas.height - 70 }, { x: 760, y: canvas.height - 70 },
+  { x: 820, y: canvas.height - 70 }, { x: 880, y: canvas.height - 70 },
+  { x: 940, y: canvas.height - 70 }
+];
+
+// Only track actual planted flowers
+const plantedFlowerData = Array.isArray(window.plantedFlowers) ? window.plantedFlowers : [];
+
+const flowerPositions = plantedFlowerData.map(({ spot_index }) => flowerSpots[spot_index]).filter(Boolean);
+
+const hivePos = { x: canvas.width - 80, y: canvas.height - 180 };
 const wellnessScores = window.wellnessScores || [];
 const validScores = wellnessScores.filter(s => typeof s === "number");
 const averageScore = validScores.length
@@ -40,20 +55,10 @@ const averageScore = validScores.length
   : 5;
 const numBees = Math.min(10, Math.max(1, Math.floor(averageScore)));
 
-const flowerPositions = [];
-const flowerY = canvas.height - 90;
-const spacing = 60;
-const totalFlowers = 3;
-const flowerWidth = 50;
-const startX = (canvas.width - (flowerWidth * totalFlowers + spacing * (totalFlowers - 1))) / 2;
-for (let i = 0; i < totalFlowers; i++) {
-  const x = startX + i * (flowerWidth + spacing);
-  flowerPositions.push({ x: x + flowerWidth / 2, y: flowerY });
-}
-const hivePos = { x: canvas.width - 80, y: canvas.height - 180 };
-
 function getRandomFlower() {
-  return flowerPositions[Math.floor(Math.random() * flowerPositions.length)];
+  return flowerPositions.length > 0
+    ? flowerPositions[Math.floor(Math.random() * flowerPositions.length)]
+    : { x: canvas.width / 2, y: canvas.height - 80 }; // fallback
 }
 
 for (let i = 0; i < numBees; i++) {
@@ -69,7 +74,7 @@ for (let i = 0; i < numBees; i++) {
 
 function updateBee(bee) {
   const speed = bee.speed;
-  let target = bee.state === "toFlower" ? bee.target : bee.state === "returning" ? hivePos : null;
+  const target = bee.state === "toFlower" ? bee.target : bee.state === "returning" ? hivePos : null;
 
   if (target) {
     const dx = target.x - bee.x;
@@ -109,30 +114,39 @@ function drawBee(bee) {
   ctx.save();
   ctx.translate(bee.x, bee.y);
   const facingLeft = bee.target ? bee.target.x < bee.x : false;
-  if (facingLeft) {
-    ctx.scale(-1, 1);
-    ctx.drawImage(images.bee, -12, -12, 24, 24);
-  } else {
-    ctx.scale(1, 1);
-    ctx.drawImage(images.bee, -12, -12, 24, 24);
-  }
+  ctx.scale(facingLeft ? -1 : 1, 1);
+  ctx.drawImage(images.bee, -12, -12, 24, 24);
   ctx.restore();
+}
+
+function drawPlantedFlowers() {
+  plantedFlowerData.forEach(({ spot_index, image }) => {
+    const spot = flowerSpots[spot_index];
+    if (!spot) return;
+    const img = new Image();
+    img.src = image;
+    img.onload = () => {
+      const maxSize = 60;
+      const aspectRatio = img.width / img.height;
+      let width = maxSize;
+      let height = width / aspectRatio;
+      if (height > maxSize) {
+        height = maxSize;
+        width = height * aspectRatio;
+      }
+      ctx.drawImage(img, spot.x - width / 2, spot.y - height / 2, width, height);
+    };
+  });
 }
 
 function drawBackground() {
   ctx.drawImage(images.background, 0, 0, canvas.width, canvas.height);
   ctx.drawImage(images.house, 20, canvas.height - 140, 120, 120);
 
-  const treeWidth = 150;
-  const treeX = canvas.width - treeWidth - 20;
-  const treeY = canvas.height - 240;
-  ctx.drawImage(images.tree, treeX, treeY, treeWidth, 220);
-  ctx.drawImage(images.hive, treeX + 60, treeY + 60, 50, 50);
-
-  for (let i = 0; i < totalFlowers; i++) {
-    const x = startX + i * (flowerWidth + spacing);
-    ctx.drawImage(images.flower, x, flowerY, flowerWidth, 60);
-  }
+  const treeX = canvas.width - 170;
+  ctx.drawImage(images.tree, treeX, canvas.height - 240, 150, 220);
+  ctx.drawImage(images.hive, treeX + 60, canvas.height - 180, 50, 50);
+  drawPlantedFlowers();
 }
 
 function animateBees() {
@@ -148,37 +162,3 @@ function animateBees() {
 function startAnimation() {
   animateBees();
 }
-
-function drawPlantedFlowers() {
-  const flowerSpots = [
-    { x: 100, y: canvas.height - 70 }, { x: 160, y: canvas.height - 70 },
-    { x: 220, y: canvas.height - 70 }, { x: 280, y: canvas.height - 70 },
-    { x: 340, y: canvas.height - 70 }, { x: 400, y: canvas.height - 70 },
-    { x: 460, y: canvas.height - 70 }, { x: 520, y: canvas.height - 70 },
-    { x: 580, y: canvas.height - 70 }, { x: 640, y: canvas.height - 70 },
-    { x: 700, y: canvas.height - 70 }, { x: 760, y: canvas.height - 70 },
-    { x: 820, y: canvas.height - 70 }, { x: 880, y: canvas.height - 70 },
-    { x: 940, y: canvas.height - 70 }
-  ];
-
-  if (Array.isArray(window.plantedFlowers)) {
-    window.plantedFlowers.forEach(({ spot_index, image }) => {
-      const spot = flowerSpots[spot_index];
-      if (spot) {
-        const img = new Image();
-        img.src = image;
-        ctx.drawImage(img, spot.x, spot.y, 40, 40);
-      }
-    });
-  }
-}
-
-function drawBackground() {
-  ctx.drawImage(images.background, 0, 0, canvas.width, canvas.height);
-  ctx.drawImage(images.house, 20, canvas.height - 140, 120, 120);
-  const treeX = canvas.width - 170;
-  ctx.drawImage(images.tree, treeX, canvas.height - 240, 150, 220);
-  ctx.drawImage(images.hive, treeX + 60, canvas.height - 180, 50, 50);
-  drawPlantedFlowers();
-}
-
