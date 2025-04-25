@@ -451,17 +451,17 @@
   border-radius: 12px;
   padding: 15px;
   width: 200px;
-  height: 320px; /* Added fixed height */
+  height: 330px; /* Set fixed height */
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   text-align: center;
   display: flex;
   flex-direction: column;
-  justify-content: space-between; /* ensures space between name/price and button */
+  align-items: center;
 }
 
 .flower-image {
   width: 100px;
-  height: 100px; /* force consistent image height */
+  height: 100px;  /* force consistent size */
   object-fit: contain;
   margin-bottom: 10px;
 }
