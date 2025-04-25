@@ -264,11 +264,54 @@ app.get("/home", async (req, res) => {
   });
 });
 
-app.get("/survey", (req, res) => {
+app.get("/survey", async (req, res) => {
   if (!req.session.user) return res.redirect("/login");
+
   const section = req.query.section || "general";
-  res.render("survey", { section, userId: req.session.user.id });
+  const userId = req.session.user.id;
+  const today = new Date().toISOString().split("T")[0];
+
+  try {
+    // Check completion status from DB
+    const [generalCount] = await db.query(
+      `SELECT COUNT(*) AS count FROM general_survey WHERE user_id = ? AND DATE(created_at) = ?`,
+      [userId, today]
+    );
+    const [mentalCount] = await db.query(
+      `SELECT COUNT(*) AS count FROM mental_survey WHERE user_id = ? AND DATE(created_at) = ?`,
+      [userId, today]
+    );
+    const [physicalCount] = await db.query(
+      `SELECT COUNT(*) AS count FROM physical_survey WHERE user_id = ? AND DATE(created_at) = ?`,
+      [userId, today]
+    );
+
+    const allCompletedToday =
+      generalCount[0].count > 0 &&
+      mentalCount[0].count > 0 &&
+      physicalCount[0].count > 0;
+
+    if (allCompletedToday) {
+      return res.render("survey", { section: "completed" });
+    }
+
+    const sectionTableMap = {
+      general: generalCount,
+      mental: mentalCount,
+      physical: physicalCount
+    };
+
+    if (sectionTableMap[section][0].count > 0) {
+      return res.redirect("/survey-choice");
+    }
+
+    res.render("survey", { section });
+  } catch (err) {
+    console.error("Survey section check error:", err);
+    res.status(500).send("Error checking survey status");
+  }
 });
+
 
 app.get("/survey-choice", async (req, res) => {
   if (!req.session.user) return res.redirect("/login");
