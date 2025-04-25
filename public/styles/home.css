@@ -466,11 +466,35 @@
   margin-bottom: 10px;
 }
 
-.flower-info {
-  flex-grow: 1;
+.planting-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 15px;
+  max-width: 400px;
+  margin: 30px auto;
 }
 
-.flower-action {
-  margin-top: auto;
+.plant-spot {
+  width: 60px;
+  height: 60px;
+  background-color: #f5f5f5;
+  border: 2px solid #ffd700;
+  border-radius: 8px;
+  font-size: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.plant-spot.filled {
+  background-color: #ffe6e6;
+  cursor: not-allowed;
+}
+
+.plant-spot.selected {
+  background-color: #c2f0c2;
+  border-color: #37AE0F;
 }
 
