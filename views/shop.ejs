@@ -16,10 +16,13 @@
       <% flowers.forEach(flower => { %>
         <div class="flower-card">
           <img src="<%= flower.image %>" alt="<%= flower.name %>" class="flower-image">
-          <h3><%= flower.name %></h3>
-          <p>Price: <%= flower.price %> coins</p>
       
-          <div style="margin-top: auto;">
+          <div class="flower-info">
+            <h3><%= flower.name %></h3>
+            <p>Price: <%= flower.price %> coins</p>
+          </div>
+      
+          <div class="flower-action">
             <% if (user.coins >= flower.price) { %>
               <form action="/buy-flower" method="POST">
                 <input type="hidden" name="flowerId" value="<%= flower.id %>">
