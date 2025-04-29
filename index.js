@@ -58,7 +58,13 @@ const calendarTimeline = {
   physical: []
 };
 
-app.get("/", (req, res) => res.redirect("/login"));
+app.get("/", (req, res) => {
+  res.redirect("/welcome");
+});
+
+app.get("/welcome", (req, res) => {
+  res.render("welcome");
+});
 
 app.get("/login", (req, res) => res.render("login"));
 app.post("/login", handleLogin);
