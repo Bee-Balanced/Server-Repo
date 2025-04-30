@@ -137,9 +137,12 @@ app.get("/edit-account", async (req, res) => {
 app.post("/edit-account", async (req, res) => {
   if (!req.session.user) return res.redirect("/login");
 
-  let { full_name, email } = req.body;
+  let { full_name, email, gender, age, country } = req.body;
   full_name = full_name?.trim();
   email = email?.trim().toLowerCase();
+  gender = gender?.trim();
+  country = country?.trim();
+  age = age ? parseInt(age) : null;
 
   if (!full_name || full_name.length < 2) {
     return res.render("edit-account", {
@@ -156,15 +159,25 @@ app.post("/edit-account", async (req, res) => {
   }
 
   try {
-    await db.query("UPDATE users SET full_name = ?, email = ? WHERE id = ?", [full_name, email, req.session.user.id]);
+    await db.query(
+      "UPDATE users SET full_name = ?, email = ?, gender = ?, age = ?, country = ? WHERE id = ?",
+      [full_name, email, gender, age, country, req.session.user.id]
+    );
+
+    // Also update session values
     req.session.user.full_name = full_name;
     req.session.user.email = email;
+    req.session.user.gender = gender;
+    req.session.user.age = age;
+    req.session.user.country = country;
+
     res.redirect("/edit-account");
   } catch (err) {
     console.error("Account update error:", err);
     res.render("edit-account", { user: req.session.user, error: "Failed to update account" });
   }
 });
+
 
 
 async function buildTimeline(userId, section) {
