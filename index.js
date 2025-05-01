@@ -387,7 +387,10 @@ app.get("/survey-choice", async (req, res) => {
     progress[shortName] = rows[0].count > 0;
   }
 
-  res.render("survey-choice", { userProgress: progress });
+  const coinsEarned = req.session.coinsEarned || null;
+  delete req.session.coinsEarned;
+
+  res.render("survey-choice", { userProgress: progress, coinsEarned });
 });
 
 app.post("/submit-survey", async (req, res) => {
@@ -432,6 +435,7 @@ app.post("/submit-survey", async (req, res) => {
     const coinsEarned = avgScore >= 8 ? 10 : avgScore >= 5 ? 5 : 2;
     await db.query("UPDATE users SET coins = coins + ? WHERE id = ?", [coinsEarned, userId]);
     await db.query("UPDATE users SET survey_count = survey_count + 1 WHERE id = ?", [userId]);
+    req.session.coinsEarned = coinsEarned;
 
     if (allCompleted) {
       return res.redirect("/survey?section=completed");
