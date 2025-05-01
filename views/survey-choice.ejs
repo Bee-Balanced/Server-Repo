@@ -8,6 +8,11 @@
 </head>
 <body>
   <div class="survey-container">
+    <% if (typeof coinsEarned !== 'undefined' && coinsEarned !== null) { %>
+      <div class="reward-message">
+        <h2>You earned <%= coinsEarned %> coins from that survey!</h2>
+      </div>
+    <% } %>
     <h1>Next Steps</h1>
 
     <% if (!userProgress.mental && !userProgress.physical) { %>
