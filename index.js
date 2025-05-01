@@ -347,8 +347,11 @@ app.get("/survey", async (req, res) => {
       mentalCount[0].count > 0 &&
       physicalCount[0].count > 0;
 
+    const coinsEarned = req.session.coinsEarned || null;
+    delete req.session.coinsEarned;
+
     if (allCompletedToday) {
-      return res.render("survey", { section: "completed", userId });
+      return res.render("survey", { section: "completed", userId, coinsEarned });
     }
 
     const sectionTableMap = {
