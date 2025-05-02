@@ -53,17 +53,34 @@ const flowerPositions = plantedFlowerData
   .filter(Boolean);
 
 const hivePos = { x: canvas.width - 80, y: canvas.height - 180 };
-const wellnessScores = window.wellnessScores || [];
-const validScores = wellnessScores.filter(s => typeof s === "number");
-const averageScore = validScores.length
-  ? validScores.reduce((sum, val) => sum + val, 0) / validScores.length
+
+function getTodayScore(data) {
+  const today = new Date().toISOString().split("T")[0];
+  const todayEntry = (data || []).find(entry => entry.date === today);
+  return todayEntry ? todayEntry.avgScore : null;
+}
+
+const todayScores = [
+  getTodayScore(window.overallData),
+  getTodayScore(window.mentalData),
+  getTodayScore(window.physicalData)
+].filter(score => score !== null);
+
+const averageTodayScore = todayScores.length
+  ? todayScores.reduce((a, b) => a + b, 0) / todayScores.length
   : 5;
-const numBees = Math.min(10, Math.max(1, Math.floor(averageScore)));
+
+const numBees = Math.min(10, Math.max(1, Math.floor(averageTodayScore)));
 
 function getRandomFlower() {
-  return flowerPositions.length > 0
-    ? flowerPositions[Math.floor(Math.random() * flowerPositions.length)]
-    : { x: canvas.width / 2, y: canvas.height - 80 };
+  if (flowerPositions.length > 0) {
+    return flowerPositions[Math.floor(Math.random() * flowerPositions.length)];
+  } else {
+    return {
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height * 0.8 // stay in view
+    };
+  }
 }
 
 const bees = [];
@@ -72,7 +89,7 @@ for (let i = 0; i < numBees; i++) {
     x: Math.random() * canvas.width,
     y: Math.random() * canvas.height,
     state: "wandering",
-    speed: averageScore >= 7 ? 0.6 : averageScore >= 4 ? 0.4 : 0.25,
+    speed: 0.2 + (averageTodayScore / 10) * 0.8,
     target: getRandomFlower(),
     timer: 0
   });
