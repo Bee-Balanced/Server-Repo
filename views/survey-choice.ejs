@@ -14,6 +14,28 @@
         <h2>You earned <%= coinsEarned %> coins from that survey!</h2>
       </div>
     <% } %>
+
+    <% if (advice && advice.section == 'general') { %>
+      <div class="advice-box">
+        <p><strong>General Focus Area:</strong> <%= advice.question %></p>
+        <p><%= advice.advice %></p>
+      </div>
+    <% } %>
+
+    <% if (advice && advice.section == 'mental') { %>
+      <div class="advice-box">
+        <p><strong>Mental Focus Area:</strong> <%= advice.question %></p>
+        <p><%= advice.advice %></p>
+      </div>
+    <% } %>
+
+    <% if (advice && advice.section == 'physical') { %>
+      <div class="advice-box">
+        <p><strong>Physical Focus Area:</strong> <%= advice.question %></p>
+        <p><%= advice.advice %></p>
+      </div>
+    <% } %>
+
     <h1>Next Steps</h1>
 
     <% if (!userProgress.mental && !userProgress.physical) { %>

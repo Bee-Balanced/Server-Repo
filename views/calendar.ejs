@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monthly Progress</title>
+  <link rel="stylesheet" href="/styles/home.css">
+  <script src="https://cdn.plot.ly/plotly-3.0.1.min.js"></script>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+</head>
+<body>
+  <%- include('partials/navbar') %>
+  <div class="home-container">
+
+    <!-- Calendar Section -->
+    <div class="calendar">
+      <div class="calendar-header">
+      
+        <div class="month-switcher">
+          <button onclick="changeMonth(-1)">←</button>
+          <h2 id="calendar-month" class="calendar-month">Month</h2>
+          <button onclick="changeMonth(1)">→</button>
+        </div>
+
+        <div class="calendar-controls">
+          <button onclick="changeCalendarType(-1)">←</button>
+          <h3 id="calendar-type" class="calendar-type">Health Type</h3>
+          <button onclick="changeCalendarType(1)">→</button>
+        </div>
+
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Sunday</th><th>Monday</th><th>Tuesday</th>
+            <th>Wednesday</th><th>Thursday</th><th>Friday</th><th>Saturday</th>
+          </tr>
+        </thead>
+        <tbody id="calendar-body"></tbody>
+      </table>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const calendarData = {
+          overall: <%- JSON.stringify(timelineData.overall) %>,
+          mental: <%- JSON.stringify(timelineData.mental) %>,
+          physical: <%- JSON.stringify(timelineData.physical) %>
+        };
+
+        let currentTypeIndex = 0;
+        let currentMonthOffset = 0;
+        const calendarTypes = ['overall', 'mental', 'physical'];
+
+        // show the color for the score
+        function colorForScore(score) {
+          if (score >= 8) return "#00c853";
+          if (score >= 6) return "#64dd17";
+          if (score >= 4) return "#ffd600";
+          if (score >= 2) return "#ff6d00";
+          return "#d50000";
+        }
+
+        function renderCalendar(type, monthOffset) {
+          const today = new Date();
+          const displayDate = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
+
+          const currentMonth = displayDate.getMonth();
+          const currentYear = displayDate.getFullYear();
+          const currentMonthName = displayDate.toLocaleString('default', { month: 'long' });
+          const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+          const startingDay = new Date(currentYear, currentMonth, 1).getDay();
+
+          const monthElem = document.getElementById("calendar-month");
+          const typeElem = document.getElementById("calendar-type");
+          const entries = calendarData[type];
+          const calendar = [];
+          let week = [];
+
+          if (monthElem) monthElem.innerText = `${currentMonthName} ${currentYear}`;
+          if (typeElem) typeElem.innerText = `${type.charAt(0).toUpperCase() + type.slice(1)} Health`;
+
+          for (let i = 0; i < startingDay; i++) week.push(null);
+
+          for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(currentYear, currentMonth, day);
+            const dateStr = date.toISOString().split('T')[0];
+            const entry = entries.find(e => e.day === dateStr);
+            week.push({
+              number: day,
+              avgScore: entry?.avgScore ?? null
+            });
+
+            if (week.length === 7) {
+              calendar.push(week);
+              week = [];
+            }
+          }
+
+          while (week.length < 7) week.push(null);
+          calendar.push(week);
+
+          const calendarBody = document.getElementById("calendar-body");
+          calendarBody.innerHTML = "";
+          calendar.forEach(week => {
+            const row = document.createElement("tr");
+            week.forEach(cell => {
+              const td = document.createElement("td");
+              if (cell) {
+                const div = document.createElement("div");
+                div.className = "date-cell";
+                div.style.backgroundColor = cell.avgScore !== null ? colorForScore(cell.avgScore) : "#eeeeee";
+                const numberDiv = document.createElement("div");
+                numberDiv.className = "date-number";
+                numberDiv.textContent = cell.number;
+
+                const scoreDiv = document.createElement("div");
+                scoreDiv.className = "date-score";
+                // show the score on the calendar
+                if (cell.avgScore !== null) {
+                  scoreDiv.textContent = Math.round(cell.avgScore * 10) / 10;
+                }
+
+                div.appendChild(numberDiv);
+                div.appendChild(scoreDiv);
+
+                td.appendChild(div);
+              } else {
+                td.classList.add("empty");
+              }
+              row.appendChild(td);
+            });
+            calendarBody.appendChild(row);
+          });
+        }
+
+        window.changeCalendarType = function (direction) {
+          currentTypeIndex = (currentTypeIndex + direction + calendarTypes.length) % calendarTypes.length;
+          renderCalendar(calendarTypes[currentTypeIndex], currentMonthOffset);
+        };
+
+        window.changeMonth = function (direction) {
+          currentMonthOffset += direction;
+          renderCalendar(calendarTypes[currentTypeIndex], currentMonthOffset);
+        };
+
+        renderCalendar(calendarTypes[currentTypeIndex], currentMonthOffset);
+      });
+    </script>
+
+  </div>
+  <footer class="home-footer">
+    <p>If you have any questions, please contact <strong>Davis Yi</strong> at 
+      <a href="mailto:davisdaehanyi@gmail.com">davisdaehanyi@gmail.com</a>.
+    </p>
+  </footer>
+</body>
+</html>
