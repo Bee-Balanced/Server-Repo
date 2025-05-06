@@ -338,14 +338,12 @@ app.get("/survey", async (req, res) => {
   const today = new Date().toISOString().split("T")[0];
   const validSections = ["general", "mental", "physical"];
 
-  // Special case: render the "completed" page
   if (section === "completed") {
     const coinsEarned = req.session.coinsEarned || null;
     delete req.session.coinsEarned;
     return res.render("survey", { section: "completed", userId, coinsEarned });
   }
 
-  // Make sure the section is valid
   if (!validSections.includes(section)) {
     console.error("Survey section check failed: Invalid section:", section);
     return res.status(400).send("Invalid survey section.");
@@ -365,20 +363,20 @@ app.get("/survey", async (req, res) => {
       [userId, today]
     );
 
-    const sectionTableMap = {
-      general: generalCount,
-      mental: mentalCount,
-      physical: physicalCount
-    };
+    const allCompletedToday =
+      generalCount[0].count > 0 &&
+      mentalCount[0].count > 0 &&
+      physicalCount[0].count > 0;
 
-    const currentSectionData = sectionTableMap[section];
-
-    if (!currentSectionData || !Array.isArray(currentSectionData) || !currentSectionData[0]) {
-      console.error("Survey section check failed: Missing DB result for section:", section);
-      return res.status(400).send("Missing data for this survey section.");
+    if (allCompletedToday) {
+      return res.redirect("/survey?section=completed");
     }
 
-    if (currentSectionData[0].count > 0) {
+    if (
+      (section === "general" && generalCount[0].count > 0) ||
+      (section === "mental" && mentalCount[0].count > 0) ||
+      (section === "physical" && physicalCount[0].count > 0)
+    ) {
       return res.redirect("/survey-choice");
     }
 
