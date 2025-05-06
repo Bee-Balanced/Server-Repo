@@ -6,6 +6,7 @@ import bcrypt from "bcrypt";
 import { handleLogin } from "./login.js";
 import { handleSignup } from "./signup.js";
 import db from "./db.js";
+import cron from "node-cron";
 import { adviceMap, questionMap } from "./advice.js";
 import { scheduleReminderJob } from "./sendReminders.js";
 import { getAdviceFor } from './advice.js';
@@ -583,6 +584,19 @@ app.post("/plant", async (req, res) => {
     ON DUPLICATE KEY UPDATE flower_id = VALUES(flower_id)
   `, [userId, spotIndex, flowerId]);
   res.redirect("/home");
+});
+
+// Run every night at 1 AM
+cron.schedule("0 1 * * *", async () => {
+  try {
+    await db.execute("DELETE FROM general_survey WHERE created_at < NOW() - INTERVAL 3 MONTH");
+    await db.execute("DELETE FROM mental_survey WHERE created_at < NOW() - INTERVAL 3 MONTH");
+    await db.execute("DELETE FROM physical_survey WHERE created_at < NOW() - INTERVAL 3 MONTH");
+
+    console.log("✅ Old surveys cleaned up successfully.");
+  } catch (error) {
+    console.error("❌ Error cleaning up old surveys:", error.message);
+  }
 });
 
 app.listen(PORT, () => {console.log(`Listening on port ${PORT}`), scheduleReminderJob();});
