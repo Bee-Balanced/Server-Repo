@@ -1,5 +1,9 @@
+* {
+  box-sizing: border-box;
+}
 body {
     font-family: 'Arial', sans-serif;
+    overflow-x: hidden;
 }
 
 #background-video {
@@ -38,6 +42,7 @@ body {
 
 .input-group {
     margin-bottom: 15px;
+    margin-right: 20px;
     text-align: left;
 }
 
