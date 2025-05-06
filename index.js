@@ -509,4 +509,7 @@ app.post("/plant", async (req, res) => {
   res.redirect("/home");
 });
 
-app.listen(PORT, () => {console.log(`listening on port ${PORT}`), scheduleReminderJob();});
+app.listen(PORT, () => {
+  console.log(`listening on port ${PORT}`);
+  scheduleReminderJob();
+});
