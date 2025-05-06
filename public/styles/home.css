@@ -498,13 +498,19 @@
 
 .plant-spot.filled {
   background-color: #ffe6e6;
-  cursor: not-allowed;
+  cursor: pointer;
 }
 
 .plant-spot.selected {
   background-color: #c2f0c2;
   border-color: #37AE0F;
 }
+
+.plant-spot:hover {
+  background-color: #fffacd;
+  border-color: #f0c000;
+}
+
 .advice-box {
   background: #fffdf2;
   border-left: 6px solid #ffd700;
