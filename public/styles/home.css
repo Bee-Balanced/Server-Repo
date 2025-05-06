@@ -534,3 +534,15 @@
   margin-top: 10px;
   font-size: 0.95em;
 }
+.feedback-text {
+  font-family: 'Georgia', serif;
+  font-style: italic;
+  background: #fff8dc;
+  padding: 10px 15px;
+  border-left: 4px solid #ffd700;
+  border-radius: 6px;
+  color: #222;
+  margin-top: 5px;
+  margin-bottom: 20px;
+  display: block;
+}
