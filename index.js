@@ -105,7 +105,7 @@ app.get("/admin/data-analysis", async (req, res) => {
 
   try {
     // Query to get the user data categorized by country, gender, and age, excluding admin users
-    const [userStats] = await db.query(
+    const [userStats] = await db.query(`
       SELECT 
         u.country,
         u.gender,
@@ -119,9 +119,8 @@ app.get("/admin/data-analysis", async (req, res) => {
       LEFT JOIN mental_survey ms ON u.id = ms.user_id
       LEFT JOIN physical_survey ps ON u.id = ps.user_id
       WHERE u.is_admin = 0
-      GROUP BY u.country, u.gender, u.age;
-
-    );
+      GROUP BY u.country, u.gender, u.age
+    `);
 
     // Render the admin-dashboard view with the user statistics
     res.render("admin-dashboard", { userStats, user: req.session.user });
@@ -209,14 +208,14 @@ async function buildTimeline(userId, section) {
     physical: "physical_survey"
   }[sectionKey];
 
-  const [entries] = await db.query(
+  const [entries] = await db.query(`
     SELECT DATE(created_at) as day, AVG(score) as avgScore
     FROM ${table}
     WHERE user_id = ?
     GROUP BY DATE(created_at)
     ORDER BY DATE(created_at) DESC
-    LIMIT 30;
-  , [userId]);
+    LIMIT 30
+  `, [userId]);
 
   calendarTimeline[sectionKey] = entries.map(({ day, avgScore }) => ({
     day: new Date(day).toISOString().split('T')[0],
@@ -344,7 +343,7 @@ app.get("/survey", async (req, res) => {
       [userId, today]
     );
     const [mentalCount] = await db.query(
-      SELECT COUNT(*) AS count FROM mental_survey WHERE user_id = ? AND DATE(created_at) = ?,
+      `SELECT COUNT(*) AS count FROM mental_survey WHERE user_id = ? AND DATE(created_at) = ?`,
       [userId, today]
     );
     const [physicalCount] = await db.query(
@@ -510,4 +509,4 @@ app.post("/plant", async (req, res) => {
   res.redirect("/home");
 });
 
-app.listen(PORT, () => {console.log(Listening on port ${PORT}), scheduleReminderJob();});
+app.listen(PORT, () => {console.log(`listening on port ${PORT}`), scheduleReminderJob();});
