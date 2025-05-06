@@ -338,7 +338,6 @@ app.get("/survey", async (req, res) => {
   const today = new Date().toISOString().split("T")[0];
 
   try {
-    // Check completion status from DB
     const [generalCount] = await db.query(
       `SELECT COUNT(*) AS count FROM general_survey WHERE user_id = ? AND DATE(created_at) = ?`,
       [userId, today]
@@ -353,9 +352,9 @@ app.get("/survey", async (req, res) => {
     );
 
     const allCompletedToday =
-      generalCount[0].count > 0 &&
-      mentalCount[0].count > 0 &&
-      physicalCount[0].count > 0;
+      generalCount?.[0]?.count > 0 &&
+      mentalCount?.[0]?.count > 0 &&
+      physicalCount?.[0]?.count > 0;
 
     const coinsEarned = req.session.coinsEarned || null;
     delete req.session.coinsEarned;
@@ -370,17 +369,24 @@ app.get("/survey", async (req, res) => {
       physical: physicalCount
     };
 
-    if (sectionTableMap[section][0].count > 0) {
+    const currentSectionData = sectionTableMap[section];
+
+    if (!currentSectionData || !Array.isArray(currentSectionData) || !currentSectionData[0]) {
+      console.error("Survey section check failed: Invalid or missing data for section:", section);
+      return res.status(400).send("Invalid survey section or missing data.");
+    }
+
+    if (currentSectionData[0].count > 0) {
       return res.redirect("/survey-choice");
     }
 
     res.render("survey", { section, userId });
+
   } catch (err) {
     console.error("Survey section check error:", err);
     res.status(500).send("Error checking survey status");
   }
 });
-
 
 app.get("/survey-choice", async (req, res) => {
   if (!req.session.user) return res.redirect("/login");
