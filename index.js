@@ -336,6 +336,20 @@ app.get("/survey", async (req, res) => {
   const section = req.query.section || "general";
   const userId = req.session.user.id;
   const today = new Date().toISOString().split("T")[0];
+  const validSections = ["general", "mental", "physical"];
+
+  // Special case: render the "completed" page
+  if (section === "completed") {
+    const coinsEarned = req.session.coinsEarned || null;
+    delete req.session.coinsEarned;
+    return res.render("survey", { section: "completed", userId, coinsEarned });
+  }
+
+  // Make sure the section is valid
+  if (!validSections.includes(section)) {
+    console.error("Survey section check failed: Invalid section:", section);
+    return res.status(400).send("Invalid survey section.");
+  }
 
   try {
     const [generalCount] = await db.query(
@@ -351,18 +365,6 @@ app.get("/survey", async (req, res) => {
       [userId, today]
     );
 
-    const allCompletedToday =
-      generalCount?.[0]?.count > 0 &&
-      mentalCount?.[0]?.count > 0 &&
-      physicalCount?.[0]?.count > 0;
-
-    const coinsEarned = req.session.coinsEarned || null;
-    delete req.session.coinsEarned;
-
-    if (allCompletedToday) {
-      return res.render("survey", { section: "completed", userId, coinsEarned });
-    }
-
     const sectionTableMap = {
       general: generalCount,
       mental: mentalCount,
@@ -372,8 +374,8 @@ app.get("/survey", async (req, res) => {
     const currentSectionData = sectionTableMap[section];
 
     if (!currentSectionData || !Array.isArray(currentSectionData) || !currentSectionData[0]) {
-      console.error("Survey section check failed: Invalid or missing data for section:", section);
-      return res.status(400).send("Invalid survey section or missing data.");
+      console.error("Survey section check failed: Missing DB result for section:", section);
+      return res.status(400).send("Missing data for this survey section.");
     }
 
     if (currentSectionData[0].count > 0) {
@@ -381,7 +383,6 @@ app.get("/survey", async (req, res) => {
     }
 
     res.render("survey", { section, userId });
-
   } catch (err) {
     console.error("Survey section check error:", err);
     res.status(500).send("Error checking survey status");
