@@ -528,3 +528,9 @@
   color: #444;
   font-size: 1em;
 }
+.no-advice-message {
+  font-style: italic;
+  color: #999;
+  margin-top: 10px;
+  font-size: 0.95em;
+}
