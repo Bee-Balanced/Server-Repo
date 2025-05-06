@@ -333,12 +333,19 @@ app.get("/home", async (req, res) => {
 app.get("/survey", async (req, res) => {
   if (!req.session.user) return res.redirect("/login");
 
-  const section = req.query.section || "general";
+  const section = req.query.section;
   const userId = req.session.user.id;
   const today = new Date().toISOString().split("T")[0];
 
+  if (section === "completed") {
+    const coinsEarned = req.session.coinsEarned || null;
+    delete req.session.coinsEarned;
+    return res.render("survey", { section: "completed", userId, coinsEarned });
+  }
+
+  const surveySection = section || "general";
+
   try {
-    // Check completion status from DB
     const [generalCount] = await db.query(
       `SELECT COUNT(*) AS count FROM general_survey WHERE user_id = ? AND DATE(created_at) = ?`,
       [userId, today]
@@ -357,10 +364,9 @@ app.get("/survey", async (req, res) => {
       mentalCount[0].count > 0 &&
       physicalCount[0].count > 0;
 
-    const coinsEarned = req.session.coinsEarned || null;
-    delete req.session.coinsEarned;
-
     if (allCompletedToday) {
+      const coinsEarned = req.session.coinsEarned || null;
+      delete req.session.coinsEarned;
       return res.render("survey", { section: "completed", userId, coinsEarned });
     }
 
@@ -370,11 +376,11 @@ app.get("/survey", async (req, res) => {
       physical: physicalCount
     };
 
-    if (sectionTableMap[section][0].count > 0) {
+    if (sectionTableMap[surveySection]?.[0]?.count > 0) {
       return res.redirect("/survey-choice");
     }
 
-    res.render("survey", { section, userId });
+    res.render("survey", { section: surveySection, userId });
   } catch (err) {
     console.error("Survey section check error:", err);
     res.status(500).send("Error checking survey status");
