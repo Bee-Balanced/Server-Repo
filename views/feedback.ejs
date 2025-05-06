@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monthly Progress</title>
+  <link rel="stylesheet" href="/styles/home.css">
+  <script src="https://cdn.plot.ly/plotly-3.0.1.min.js"></script>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+</head>
+<body>
+  <%- include('partials/navbar') %>
+  <div class="home-container">
+    <h1>Feedback and Advice</h1>
+
+    <% if (adviceList.length > 0) { %>
+      <% 
+        const sections = ['general_survey', 'mental_survey', 'physical_survey']; 
+        sections.forEach(function(section) {
+      %>
+        <div class="advice-box">
+            <h2><%= section.replace('_survey', '').charAt(0).toUpperCase() + section.replace('_survey', '').slice(1).toLowerCase() %> Focus Area:</h2>
+
+          <% 
+            // Filter for advice related to the current section
+            const sectionAdvice = adviceList.filter(advice => advice.section === section); 
+            if (sectionAdvice.length > 0) { 
+              sectionAdvice.forEach(function(advice) {
+          %>
+            <p><strong>Question:</strong> <%= advice.question %></p>
+            <p><%= advice.advice %></p>
+          <% }) 
+            } else { 
+          %>
+            <p>No advice available for this section.</p>
+          <% } %>
+        </div>
+      <% }) 
+    } else { %>
+      <p>No feedback available.</p>
+    <% } %>
+    
+
+  </div>
+</body>
+</html>

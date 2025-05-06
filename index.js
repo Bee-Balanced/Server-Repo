@@ -8,6 +8,7 @@ import { handleSignup } from "./signup.js";
 import db from "./db.js";
 import { adviceMap, questionMap } from "./advice.js";
 import { scheduleReminderJob } from "./sendReminders.js";
+import { getAdviceFor } from './advice.js';
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -45,13 +46,6 @@ app.use((req, res, next) => {
   next();
 });
 
-let surveyResults = {
-  overall: [],
-  mental: [],
-  physical: [],
-  days: []
-};
-let allResponses = [];
 const calendarTimeline = {
   overall: [],
   mental: [],
@@ -67,6 +61,21 @@ function getLocalDateString() {
     day: '2-digit'
   }).format(now);
 }
+
+function getLowestScoringQuestion(scores) {
+  const entries = Object.entries(scores);
+  const values = entries.map(([, val]) => val);
+  const avg = values.reduce((a, b) => a + b, 0) / values.length;
+
+  const threshold = avg - 2;
+  const standout = entries.find(([, val]) => val <= threshold);
+  if (standout) return { key: standout[0], value: standout[1], reason: 'standout' };
+
+  const minVal = Math.min(...values);
+  const lowest = entries.find(([, val]) => val === minVal);
+  return { key: lowest[0], value: lowest[1], reason: 'low' };
+}
+
 
 app.get("/", (req, res) => {
   res.redirect("/welcome");
@@ -200,7 +209,6 @@ app.post("/edit-account", async (req, res) => {
 });
 
 
-
 async function buildTimeline(userId, section) {
   const sectionKey = section === "general" ? "overall" : section;
   const table = {
@@ -225,50 +233,94 @@ async function buildTimeline(userId, section) {
 
 }
 
+app.get("/calendar", async (req, res) => {
+  if (!req.session.user) return res.redirect("/login");
+
+  const userId = req.session.user.id;
+  const calendarView = req.query.calendarView || "overall";
+
+  await buildTimeline(userId, "overall");
+  await buildTimeline(userId, "mental");
+  await buildTimeline(userId, "physical");
+
+  res.render("calendar", {
+    calendarView,
+    timelineData: {
+      overall: calendarTimeline.overall.slice(),
+      mental: calendarTimeline.mental.slice(),
+      physical: calendarTimeline.physical.slice()
+    }
+  });
+});
 
 app.get("/home", async (req, res) => {
   if (!req.session.user) return res.redirect("/login");
   const userId = req.session.user.id;
-  const today = new Date().getDay();
-  const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  const calendarView = req.query.calendarView || "overall";
   const [planted] = await db.query(`
     SELECT pf.spot_index, f.image FROM planted_flowers pf
     JOIN flowers f ON f.id = pf.flower_id
     WHERE pf.user_id = ?
   `, [userId]);
 
-  if (surveyResults.days.length === 0 && allResponses.length === 0) {
-    while (surveyResults.days.length < today) {
-      surveyResults.days.push(weekdays[surveyResults.days.length]);
-      surveyResults.overall.push(5);
-      surveyResults.mental.push(5);
-      surveyResults.physical.push(5);
+  res.render("home", {
+    plantedFlowers: planted
+  });
+});
+
+
+app.get("/feedback", async (req, res) => {
+  if (!req.session.user) return res.redirect("/login");
+
+  const userId = req.session.user.id;
+  const today = getLocalDateString();
+
+  const sections = ["general_survey", "mental_survey", "physical_survey"];
+  const progress = { general: false, mental: false, physical: false };
+  const allAdvice = [];
+
+  for (const section of sections) {
+    const [countRows] = await db.query(
+      `SELECT COUNT(*) AS count FROM ${section} WHERE user_id = ? AND DATE(created_at) = ?`,
+      [userId, today]
+    );
+  
+    const shortName = section.split("_")[0];
+    progress[shortName] = countRows[0].count > 0;
+  
+    if (countRows[0].count === 0) continue;
+  
+    const [rows] = await db.query(
+      `SELECT * FROM ${section} WHERE user_id = ? AND DATE(created_at) = ?`,
+      [userId, today]
+    );
+  
+    if (rows.length > 0) {
+      const lowestRow = rows.reduce((min, curr) =>
+        curr.score < min.score ? curr : min
+      );
+  
+      const shortSection = section.split("_")[0];
+      const advice = getAdviceFor(shortSection, lowestRow.question);
+      if (advice) {
+        advice.section = section;
+        allAdvice.push(advice);
+      }
+
     }
   }
+  
 
-  await buildTimeline(userId, "overall");
-  await buildTimeline(userId, "mental");
-  await buildTimeline(userId, "physical");
+  res.render("feedback", { userProgress: progress, adviceList: allAdvice });
+});
+
+app.get("/chart", async (req, res) => {
+  if (!req.session.user) return res.redirect("/login");
+
+  const userId = req.session.user.id;
 
   const [general] = await db.query("SELECT * FROM general_survey WHERE user_id = ? ORDER BY created_at DESC", [userId]);
   const [mental] = await db.query("SELECT * FROM mental_survey WHERE user_id = ? ORDER BY created_at DESC", [userId]);
   const [physical] = await db.query("SELECT * FROM physical_survey WHERE user_id = ? ORDER BY created_at DESC", [userId]);
-
-  function getLowestFeedback(data, sectionName) {
-    const sectionQuestions = questionMap[sectionName];
-    return data
-      .map(entry => ({
-        question: sectionQuestions[entry.question] || entry.question,
-        avgScore: entry.score || 5,
-      }))
-      .sort((a, b) => a.avgScore - b.avgScore)
-      .slice(0, 3)
-      .map(({ question }) => ({
-        question,
-        advice: adviceMap[question] || "No advice available.",
-      }));
-  }
 
   function getRecentSurveyScores(entries) {
     const now = new Date();
@@ -278,55 +330,31 @@ app.get("/home", async (req, res) => {
     const dailyScores = {};
 
     for (const entry of entries) {
-      const rawDate = entry.created_at instanceof Date
-        ? entry.created_at
-        : new Date(entry.created_at);
-
+      const rawDate = entry.created_at instanceof Date ? entry.created_at : new Date(entry.created_at);
       const dateObj = new Date(rawDate.getFullYear(), rawDate.getMonth(), rawDate.getDate());
       const localDateStr = dateObj.toISOString().split("T")[0];
 
       if (dateObj >= start && dateObj <= now) {
-        if (!dailyScores[localDateStr]) {
-          dailyScores[localDateStr] = [];
-        }
+        if (!dailyScores[localDateStr]) dailyScores[localDateStr] = [];
         dailyScores[localDateStr].push(entry.score);
       }
     }
 
-    const recentData = Object.keys(dailyScores)
-      .sort()
-      .map(dateStr => {
-        const scores = dailyScores[dateStr];
-        const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
-        return {
-          date: dateStr,
-          avgScore: Math.round(avg * 100) / 100
-        };
-      });
-
-    return recentData;
+    return Object.keys(dailyScores).sort().map(dateStr => {
+      const scores = dailyScores[dateStr];
+      const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+      return { date: dateStr, avgScore: Math.round(avg * 100) / 100 };
+    });
   }
-
 
   const overallData = getRecentSurveyScores(general);
   const mentalData = getRecentSurveyScores(mental);
   const physicalData = getRecentSurveyScores(physical);
 
-  res.render("home", {
+  res.render("chart", {
     overallData,
     mentalData,
-    physicalData,
-    days: weekdays,
-    overallFeedback: getLowestFeedback(general, "general"),
-    mentalFeedback: getLowestFeedback(mental, "mental"),
-    physicalFeedback: getLowestFeedback(physical, "physical"),
-    timelineData: {
-      overall: calendarTimeline.overall.slice(),
-      mental: calendarTimeline.mental.slice(),
-      physical: calendarTimeline.physical.slice()
-    },
-    calendarView,
-    plantedFlowers: planted
+    physicalData
   });
 });
 
@@ -337,10 +365,20 @@ app.get("/survey", async (req, res) => {
   const userId = req.session.user.id;
   const today = getLocalDateString();
 
+  let advice = null;
+  const feedback = req.session.feedback || null;
+  if (feedback && feedback.question) {
+    advice = getAdviceFor(feedback.section, feedback.question);
+    if (advice) {
+      advice.section = feedback.section;
+    }
+  }
+  delete req.session.feedback;
+
   if (section === "completed") {
     const coinsEarned = req.session.coinsEarned || null;
     delete req.session.coinsEarned;
-    return res.render("survey", { section: "completed", userId, coinsEarned });
+    return res.render("survey", { section: "completed", userId, coinsEarned, advice });
   }
 
   const surveySection = section || "general";
@@ -367,7 +405,7 @@ app.get("/survey", async (req, res) => {
     if (allCompletedToday) {
       const coinsEarned = req.session.coinsEarned || null;
       delete req.session.coinsEarned;
-      return res.render("survey", { section: "completed", userId, coinsEarned });
+      return res.render("survey", { section: "completed", userId, coinsEarned, advice });
     }
 
     const sectionTableMap = {
@@ -380,7 +418,7 @@ app.get("/survey", async (req, res) => {
       return res.redirect("/survey-choice");
     }
 
-    res.render("survey", { section: surveySection, userId });
+    res.render("survey", { section: surveySection, userId, advice });
   } catch (err) {
     console.error("Survey section check error:", err);
     res.status(500).send("Error checking survey status");
@@ -408,7 +446,18 @@ app.get("/survey-choice", async (req, res) => {
   const coinsEarned = req.session.coinsEarned || null;
   delete req.session.coinsEarned;
 
-  res.render("survey-choice", { userProgress: progress, coinsEarned });
+  const feedback = req.session.feedback || null;
+  let advice = null;
+
+  if (feedback && feedback.question) {
+    advice = getAdviceFor(feedback.section, feedback.question);
+    if (advice) {
+      advice.section = feedback.section;
+    }  
+  }
+  delete req.session.feedback;
+
+  res.render("survey-choice", { userProgress: progress, coinsEarned, advice });
 });
 
 app.post("/submit-survey", async (req, res) => {
@@ -456,10 +505,31 @@ app.post("/submit-survey", async (req, res) => {
     await db.query("UPDATE users SET survey_count = survey_count + 1 WHERE id = ?", [userId]);
     req.session.coinsEarned = coinsEarned;
 
-    if (allCompleted) {
-      return res.redirect("/survey?section=completed");
+    const feedbackData = {};
+    for (const [question, score] of entries) {
+      feedbackData[question] = parseInt(score);
     }
-    return res.redirect("/survey-choice");
+
+    const lowest = getLowestScoringQuestion(feedbackData);
+    req.session.feedback = {
+      question: lowest.key,
+      score: lowest.value,
+      reason: lowest.reason,
+      section
+    };
+    
+
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session Save Error:", err);
+        return res.status(500).send("Failed to save session data");
+      }
+  
+      if (allCompleted) {
+        return res.redirect("/survey?section=completed");
+      }
+      return res.redirect("/survey-choice");
+    });
   } catch (err) {
     console.error("Survey Submit DB Error:", err);
     res.status(500).send("Failed to save survey");

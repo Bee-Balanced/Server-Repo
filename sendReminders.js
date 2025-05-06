@@ -47,7 +47,7 @@ const scheduleReminderJob = () => {
     const daysSinceAnchor = Math.floor((today - anchorDate) / msPerDay);
 
     if (daysSinceAnchor % 3 === 0) {
-      console.log("📧 Sending reminders to eligible users...");
+      console.log("Sending reminders to eligible users...");
 
       try {
         const [users] = await db.query("SELECT id, email, full_name FROM users WHERE unsubscribed = FALSE");

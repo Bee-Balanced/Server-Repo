@@ -1,76 +1,109 @@
-<script type="module">
-   import Plotly from 'plotly.js-dist';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weekly Progress</title>
+  <link rel="stylesheet" href="/styles/home.css">
+  <script src="https://cdn.plot.ly/plotly-3.0.1.min.js"></script>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+</head>
+<body>
+  <%- include('partials/navbar') %>
+  <div class="home-container">
 
-   document.addEventListener("DOMContentLoaded", function () {
-     const overallData = <%- JSON.stringify(overallData) %> || [];
-     const mentalData = <%- JSON.stringify(mentalData) %> || [];
-     const physicalData = <%- JSON.stringify(physicalData) %> || [];
-     const days = <%- JSON.stringify(days) %> || [];
+    <!-- Charts Section -->
+    <div class="chart-feedback-container">
+      <% const sections = ['overall', 'mental', 'physical']; %>
+      <% sections.forEach(section => { %>
+        <div class="chart-feedback-item">
+          <div id="<%= section %>Chart" class="chart"></div>
+          <div class="chart-button">
+            <a 
+              href="<%= section === 'overall' ? '/survey' : `/survey?section=${section}` %>" 
+              class="btn">
+              Take <%= section.charAt(0).toUpperCase() + section.slice(1) %> Survey
+            </a>
+          </div>
+        </div>
+      <% }); %>
+    </div>
 
-     function drawChart(chartId, title, data, days) {
-       // Ensure the chart has valid data
-       if (!data || data.length === 0 || !days || days.length === 0) {
-         console.warn(`No data available for ${title}`);
-         return;
-       }
+    <script src="/js/beeAnimation.js"></script>
+    <script>
+      function showAdvice(id, prefix) {
+        document.querySelectorAll(`div[id^="${prefix}Advice"]`).forEach(el => el.style.display = 'none');
+        if (id) document.getElementById(id).style.display = 'block';
+      }
+    </script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const charts = {
+          overall: <%- JSON.stringify(overallData) %>,
+          mental: <%- JSON.stringify(mentalData) %>,
+          physical: <%- JSON.stringify(physicalData) %>
+        };
+        function drawChart(chartId, title, data) {
+        const x = data.map(e => e.date);
+        const y = data.map(e => e.avgScore);
 
-       const trace = {
-         x: days,  // Use actual date labels instead of fixed weekdays
-         y: data,
-         type: 'scatter',
-         mode: 'lines+markers',
-         marker: { color: '#FFD700' },
-         line: { color: '#FFD700' }
-       };
+        if (!x.length) {
+          document.getElementById(chartId).innerHTML = 
+          '<div style="display: flex; justify-content: center; align-items: center; height: 100%; background-color: #cae9f6; border-radius: 8px; border: 2px solid #ffd700; font-size: 24px; font-weight: bold; color: #ffd700; text-align: center; box-sizing: border-box;">No data for the past 2 weeks.</div>';
+          return;
+        }
+        const lastX = x.at(-1);
+        const lastY = y.at(-1);
 
-       const layout = {
-         title: title,
-         titlefont: { color: '#FFD700' },
-         xaxis: { 
-           title: "Date",
-           tickangle: -45,  // Rotate for better readability
-           tickfont: { color: '#FFD700' },
-           type: 'category', // Ensures proper date formatting
-           showgrid: true,
-           gridcolor: "#444"
-         },
-         yaxis: { 
-           title: "Average Score", 
-           range: [0, 10], 
-           tickfont: { color: '#FFD700' },
-           showgrid: true,
-           gridcolor: "#444"
-         },
-         plot_bgcolor: '#222',
-         paper_bgcolor: '#222'
-       };
+        Plotly.newPlot(chartId, [{
+          x,
+          y,
+          type: 'scatter',
+          mode: 'lines+markers',
+          marker: { color: '#FFFFFF' },
+          line: { color: '#FFFFFF' }
+        }], {
+          title: title,
+          titlefont: { color: '#FFD700' },
+          xaxis: {
+            title: "Date",
+            type: 'category',
+            tickfont: { color: '#37AE0F' },
+            linecolor: '#37AE0F'
+          },
+          yaxis: {
+            title: "Score",
+            range: [0, 10],
+            tickfont: { color: '#37AE0F' },
+            linecolor: '#37AE0F'
+          },
+          plot_bgcolor: '#cae9f6',
+          paper_bgcolor: '#cae9f6',
+          images: [{
+            source: "/images/bee.gif",
+            x: lastX,
+            y: lastY,
+            xref: "x",
+            yref: "y",
+            sizex: 3,
+            sizey: 3,
+            xanchor: "center",
+            yanchor: "middle",
+            layer: "above"
+          }]
+        });
+      }
 
-       // Find the last non-null, non-zero value for placing the bee image
-       let lastIndex = data.findLastIndex(val => val !== null && val !== 0);
-       
-       if (lastIndex !== -1) {
-         const lastX = days[lastIndex];
-         const lastY = data[lastIndex];
-         layout.images = [{
-           source: "/images/bee.gif",
-           x: lastX,
-           y: lastY,
-           xref: "x",
-           yref: "y",
-           sizex: 3,
-           sizey: 3,
-           xanchor: "center",
-           yanchor: "middle",
-           layer: "above"
-         }];
-       }
-
-       Plotly.newPlot(chartId, [trace], layout);
-     }
-
-     drawChart("overallChart", "Overall Health Progress", overallData, days);
-     drawChart("mentalChart", "Mental Health Progress", mentalData, days);
-     drawChart("physicalChart", "Physical Health Progress", physicalData, days);
-   });
-</script>
-
+        drawChart("overallChart", "Overall Health (Last 2 Weeks)", charts.overall);
+        drawChart("mentalChart", "Mental Health (Last 2 Weeks)", charts.mental);
+        drawChart("physicalChart", "Physical Health (Last 2 Weeks)", charts.physical);
+      });
+    </script>
+  </div>
+  <footer class="home-footer">
+    <p>If you have any questions, please contact <strong>Davis Yi</strong> at 
+      <a href="mailto:davisdaehanyi@gmail.com">davisdaehanyi@gmail.com</a>.
+    </p>
+  </footer>
+</body>
+</html>
