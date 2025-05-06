@@ -267,6 +267,52 @@ app.get("/home", async (req, res) => {
   });
 });
 
+
+app.get("/feedback", async (req, res) => {
+  if (!req.session.user) return res.redirect("/login");
+
+  const userId = req.session.user.id;
+  const today = getLocalDateString();
+
+  const sections = ["general_survey", "mental_survey", "physical_survey"];
+  const progress = { general: false, mental: false, physical: false };
+  const allAdvice = [];
+
+  for (const section of sections) {
+    const [countRows] = await db.query(
+      `SELECT COUNT(*) AS count FROM ${section} WHERE user_id = ? AND DATE(created_at) = ?`,
+      [userId, today]
+    );
+  
+    const shortName = section.split("_")[0];
+    progress[shortName] = countRows[0].count > 0;
+  
+    if (countRows[0].count === 0) continue;
+  
+    const [rows] = await db.query(
+      `SELECT * FROM ${section} WHERE user_id = ? AND DATE(created_at) = ?`,
+      [userId, today]
+    );
+  
+    if (rows.length > 0) {
+      const lowestRow = rows.reduce((min, curr) =>
+        curr.score < min.score ? curr : min
+      );
+  
+      const shortSection = section.split("_")[0];
+      const advice = getAdviceFor(shortSection, lowestRow.question);
+      if (advice) {
+        advice.section = section;
+        allAdvice.push(advice);
+      }
+
+    }
+  }
+  
+
+  res.render("feedback", { userProgress: progress, adviceList: allAdvice });
+});
+
 app.get("/chart", async (req, res) => {
   if (!req.session.user) return res.redirect("/login");
 
@@ -312,7 +358,6 @@ app.get("/chart", async (req, res) => {
   });
 });
 
-
 app.get("/survey", async (req, res) => {
   if (!req.session.user) return res.redirect("/login");
 
@@ -320,7 +365,7 @@ app.get("/survey", async (req, res) => {
   const userId = req.session.user.id;
   const today = getLocalDateString();
 
-    let advice = null;
+  let advice = null;
   const feedback = req.session.feedback || null;
   if (feedback && feedback.question) {
     advice = getAdviceFor(feedback.section, feedback.question);
@@ -333,7 +378,7 @@ app.get("/survey", async (req, res) => {
   if (section === "completed") {
     const coinsEarned = req.session.coinsEarned || null;
     delete req.session.coinsEarned;
-    return res.render("survey", { section: "completed", userId, coinsEarned });
+    return res.render("survey", { section: "completed", userId, coinsEarned, advice });
   }
 
   const surveySection = section || "general";
@@ -358,6 +403,8 @@ app.get("/survey", async (req, res) => {
       physicalCount[0].count > 0;
 
     if (allCompletedToday) {
+      const coinsEarned = req.session.coinsEarned || null;
+      delete req.session.coinsEarned;
       return res.render("survey", { section: "completed", userId, coinsEarned, advice });
     }
 
@@ -371,7 +418,7 @@ app.get("/survey", async (req, res) => {
       return res.redirect("/survey-choice");
     }
 
-    res.render("survey", { section: surveySection, userId });
+    res.render("survey", { section: surveySection, userId, advice });
   } catch (err) {
     console.error("Survey section check error:", err);
     res.status(500).send("Error checking survey status");
