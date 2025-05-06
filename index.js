@@ -133,8 +133,15 @@ app.get("/admin/data-analysis", async (req, res) => {
 
     `);
 
+    const [totalResult] = await db.query(`
+      SELECT COUNT(*) AS total
+      FROM users
+      WHERE is_admin = 0;
+    `);
+    const totalUsers = totalResult[0].total;
+
     // Render the admin-dashboard view with the user statistics
-    res.render("admin-dashboard", { userStats, user: req.session.user });
+    res.render("admin-dashboard", { userStats, totalUsers, user: req.session.user });
   } catch (err) {
     console.error("Error fetching user statistics:", err);
     res.status(500).send("Failed to load data analysis");
