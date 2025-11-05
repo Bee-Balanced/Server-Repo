@@ -8,7 +8,7 @@ import { handleSignup } from "./signup.js";
 import db from "./db.js";
 import cron from "node-cron";
 import { adviceMap, questionMap } from "./advice.js";
-import { scheduleReminderJob } from "./sendReminders.js";
+// import { scheduleReminderJob } from "./sendReminders.js";
 import { getAdviceFor } from './advice.js';
 dotenv.config();
 const app = express();
@@ -600,10 +600,13 @@ cron.schedule("0 1 * * *", async () => {
     await db.execute("DELETE FROM mental_survey WHERE created_at < NOW() - INTERVAL 3 MONTH");
     await db.execute("DELETE FROM physical_survey WHERE created_at < NOW() - INTERVAL 3 MONTH");
 
-    console.log("✅ Old surveys cleaned up successfully.");
+    console.log("Old surveys cleaned up successfully.");
   } catch (error) {
-    console.error("❌ Error cleaning up old surveys:", error.message);
+    console.error("Error cleaning up old surveys:", error.message);
   }
 });
 
-app.listen(PORT, () => {console.log(`Listening on port ${PORT}`), scheduleReminderJob();});
+app.listen(PORT, () => {
+    console.log(`Listening on port ${PORT}`);
+//  scheduleReminderJob();
+});
