@@ -10,11 +10,13 @@ import cron from "node-cron";
 import { adviceMap, questionMap } from "./advice.js";
 // import { scheduleReminderJob } from "./sendReminders.js";
 import { getAdviceFor } from './advice.js';
+import OpenAI from "openai";
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8000;
 
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(express.static("public"));
 app.set("view engine", "ejs");
 
@@ -91,6 +93,39 @@ app.post("/login", handleLogin);
 
 app.get("/signup", (req, res) => res.render("signup"));
 app.post("/signup", handleSignup);
+
+app.get("/chatbot", (req, res) => {
+  res.render("chatbot");
+});
+
+// OpenAI client
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+// OpenAI API
+app.post("/api/chatbot", async (req, res) => {
+  const { messages } = req.body;
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return res.status(400).json({ error: "messages array is required" });
+  }
+
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+
+  const stream = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages,
+    stream: true,
+  });
+
+  for await (const part of stream) {
+    const chunk = part.choices[0]?.delta?.content || "";
+    if (chunk) res.write(`data: ${chunk}\n\n`);
+  }
+
+  res.write("data: [DONE]\n\n");
+  res.end();
+});
 
 // unsubscribe from email notifications
 app.get("/unsubscribe", async (req, res) => {
