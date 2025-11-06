@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatbot</title>
+  <link rel="stylesheet" href="/styles/home.css">
+  <script src="https://cdn.plot.ly/plotly-3.0.1.min.js"></script>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+<!---->
+    <style>
+      body { font-family: sans-serif; max-width: 700px; margin: 40px auto; }
+      #messages { border: 1px solid #dddddd; padding: 1rem; min-height: 300px; }
+      .user { font-weight: bold; margin-top: .5rem; }
+      .assistant { white-space: pre-wrap; margin-bottom: .5rem; }
+      #inputRow { margin-top: 1rem; display: flex; gap: .5rem; }
+      input { flex: 1; }
+    </style>
+<!---->
+</head>
+<!doctype html>
+<html>
+  <body>
+    <h1>Chatbot</h1>
+
+    <% if (user) { %>
+      <p>Hi, <%= user.full_name %>!</p>
+    <% } %>
+
+    <div id="messages"></div>
+
+    <div id="inputRow">
+      <input id="prompt" placeholder="Type a message..." autocomplete="off" />
+      <button id="send">Send</button>
+    </div>
+
+    <script>
+        const messagesDiv = document.getElementById("messages");
+        const promptInput = document.getElementById("prompt");
+        const sendBtn = document.getElementById("send");
+
+        const conversation = [
+            { role: "system", content: "You are a helpful assistant for the BeeBalanced application, a healthy lifestyle coach. Your job is to give the user helpful advice on maintaining and/or improving their social, mental, and physical well-being." }
+        ];
+
+        async function sendMessage() {
+            const text = promptInput.value.trim();
+            if (!text) return;
+            promptInput.value = "";
+
+            const userEl = document.createElement("div");
+            userEl.textContent = "You: " + text;
+            messagesDiv.appendChild(userEl);
+
+            conversation.push({ role: "user", content: text });
+
+            const resp = await fetch("/api/chatbot", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ messages: conversation }),
+            });
+
+            const aiEl = document.createElement("div");
+            aiEl.textContent = "Chatbot: ";
+            messagesDiv.appendChild(aiEl);
+
+            const reader = resp.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+            let aiText = "";
+
+            while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value, { stream: true });
+
+            chunk.split("\n").forEach((line) => {
+                if (line.startsWith("data: ")) {
+                const data = line.slice(6);
+                if (data === "[DONE]") return;
+                aiText += data;
+                aiEl.textContent = "AI: " + aiText;
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                }
+            });
+            }
+
+            conversation.push({ role: "assistant", content: aiText });
+        }
+
+        sendBtn.onclick = sendMessage;
+        promptInput.onkeydown = (e) => {
+            if (e.key === "Enter") sendMessage();
+        };
+    </script>
+  </body>
+</html>
